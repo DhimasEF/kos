@@ -55,6 +55,37 @@ class Auth extends CI_Controller {
     }
 
     // =====================
+    // PROSES REGISTER
+    // =====================
+    public function register() {
+
+        $name     = $this->input->post('name');
+        $email    = $this->input->post('email');
+        $password = password_hash($this->input->post('password'), PASSWORD_DEFAULT);
+
+        // cek email sudah ada
+        $cek = $this->M_User->getByEmail($email);
+
+        if ($cek) {
+            $this->session->set_flashdata('error', 'Email sudah terdaftar');
+            redirect('auth');
+        }
+
+        // insert user
+        $data = [
+            'name'     => $name,
+            'email'    => $email,
+            'password' => $password,
+            'role'     => 'user'
+        ];
+
+        $this->M_User->insert($data);
+
+        $this->session->set_flashdata('success', 'Register berhasil, silakan login');
+        redirect('auth');
+    }
+
+    // =====================
     // LOGOUT
     // =====================
     public function logout() {
