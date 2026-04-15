@@ -59,8 +59,24 @@ class Admin extends CI_Controller {
     }
 
     public function booking() {
-        $data['booking'] = $this->M_Booking->getAll();
+        $data['booking'] = $this->M_Booking->getAllWithDetail();
         $this->load->view('admin/booking', $data);
+    }
+
+    // APPROVE
+    public function booking_approve($id) {
+        $this->db->where('id_booking', $id);
+        $this->db->update('bookings', ['status' => 'approved']);
+
+        redirect('admin/booking');
+    }
+
+    // REJECT
+    public function booking_reject($id) {
+        $this->db->where('id_booking', $id);
+        $this->db->update('bookings', ['status' => 'rejected']);
+
+        redirect('admin/booking');
     }
 
     public function message() {
