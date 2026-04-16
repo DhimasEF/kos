@@ -90,38 +90,50 @@ class User extends CI_Controller {
 
     public function payment_store() {
 
-        // CONFIG UPLOAD
+        // CONFIG UPLOAD (sementara)
         $config['upload_path']   = './assets/uploads/payment/';
         $config['allowed_types'] = 'jpg|jpeg|png';
         $config['max_size']      = 2048;
-        $config['file_name']     = 'payment_' . time();
+        $config['file_name']     = 'temp_' . time();
 
         $this->load->library('upload', $config);
 
         if (!$this->upload->do_upload('proof')) {
-
-            // kalau gagal upload
             echo $this->upload->display_errors();
             return;
-
-        } else {
-
-            $upload_data = $this->upload->data();
-            $file_name   = $upload_data['file_name'];
-
-            $data = [
-                'id_booking'      => $this->input->post('id_booking'),
-                'amount'          => $this->input->post('amount'),
-                'payment_method'  => $this->input->post('payment_method'),
-                'payment_status'  => 'paid',
-                'payment_date'    => date('Y-m-d H:i:s'),
-                'proof_of_payment'=> $file_name
-            ];
-
-            $this->db->insert('payments', $data);
-
-            redirect('user/booking_detail/'.$this->input->post('id_booking'));
         }
+
+        $upload_data = $this->upload->data();
+        $temp_name   = $upload_data['file_name'];
+
+        // INSERT TANPA FILE DULU
+        $data = [
+            'id_booking'      => $this->input->post('id_booking'),
+            'amount'          => $this->input->post('amount'),
+            'payment_method'  => $this->input->post('payment_method'),
+            'payment_status'  => 'paid',
+            'payment_date'    => date('Y-m-d H:i:s'),
+        ];
+
+        $this->db->insert('payments', $data);
+        $id_payment = $this->db->insert_id();
+
+        // RENAME FILE
+        $ext = pathinfo($temp_name, PATHINFO_EXTENSION);
+        $new_name = 'payment_'.$id_payment.'_'.date('Ymd').'.'.$ext;
+
+        rename(
+            './assets/uploads/payment/'.$temp_name,
+            './assets/uploads/payment/'.$new_name
+        );
+
+        // UPDATE DB DENGAN NAMA FINAL
+        $this->db->where('id_payment', $id_payment);
+        $this->db->update('payments', [
+            'proof_of_payment' => $new_name
+        ]);
+
+        redirect('user/booking_detail/'.$this->input->post('id_booking'));
     }
 
     public function payment_detail($id_booking) {
@@ -136,21 +148,45 @@ class User extends CI_Controller {
 
         $id = $this->input->post('id_payment');
 
+        // ambil data lama
+        $old = $this->db->get_where('payments', ['id_payment' => $id])->row();
+
         $data = [
             'payment_method' => $this->input->post('payment_method'),
         ];
 
         // kalau upload baru
-        if ($_FILES['proof']['name']) {
+        if (!empty($_FILES['proof']['name'])) {
 
-            $config['upload_path']   = './uploads/payment/';
-            $config['allowed_types'] = 'jpg|png|jpeg';
+            $config['upload_path']   = './assets/uploads/payment/';
+            $config['allowed_types'] = 'jpg|jpeg|png';
+            $config['file_name']     = 'temp_' . time();
 
             $this->load->library('upload', $config);
 
             if ($this->upload->do_upload('proof')) {
+
                 $upload = $this->upload->data();
-                $data['proof_of_payment'] = $upload['file_name'];
+                $temp_name = $upload['file_name'];
+
+                // HAPUS FILE LAMA
+                if ($old && $old->proof_of_payment) {
+                    $old_path = './assets/uploads/payment/'.$old->proof_of_payment;
+                    if (file_exists($old_path)) {
+                        unlink($old_path);
+                    }
+                }
+
+                // RENAME FILE BARU
+                $ext = pathinfo($temp_name, PATHINFO_EXTENSION);
+                $new_name = 'payment_'.$id.'_'.date('Ymd').'.'.$ext;
+
+                rename(
+                    './assets/uploads/payment/'.$temp_name,
+                    './assets/uploads/payment/'.$new_name
+                );
+
+                $data['proof_of_payment'] = $new_name;
             }
         }
 
