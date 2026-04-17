@@ -195,4 +195,63 @@ class User extends CI_Controller {
 
         redirect('user/payment');
     }
+
+    public function message() {
+        $id_user  = $this->session->userdata('id_user');
+        $id_admin = 1;
+
+        $room = $this->M_Message->getRoom($id_user, $id_admin);
+
+        $data['room'] = $room;
+
+        if ($room) {
+            $data['messages'] = $this->M_Message->getMessages($room->id_chat);
+            $data['id_chat']  = $room->id_chat;
+
+            $this->M_Message->markAsRead($room->id_chat, $id_user);
+        } else {
+            $data['messages'] = [];
+            $data['id_chat'] = 0;
+        }
+
+        $this->load->view('user/message', $data);
+    }
+
+    public function send_message()
+    {
+        $id_user  = $this->session->userdata('id_user');
+        $id_admin = 1;
+
+        $message = trim($this->input->post('message'));
+
+        if ($message == '') {
+            echo json_encode(['status' => false]);
+            return;
+        }
+
+        $room = $this->M_Message->getRoom($id_user, $id_admin);
+
+        if (!$room) {
+            $id_chat = $this->M_Message->createRoom($id_user, $id_admin);
+        } else {
+            $id_chat = $room->id_chat;
+        }
+
+        $data = [
+            'id_chat'   => $id_chat,
+            'sender_id' => $id_user,
+            'message'   => $message,
+            'is_read'   => 0,
+            'sent_at'   => date('Y-m-d H:i:s')
+        ];
+
+        $this->M_Message->sendMessage($data);
+
+        echo json_encode([
+            'status' => true,
+            'id_chat' => $id_chat
+        ]);
+    }
+
+    
 }
