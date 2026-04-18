@@ -85,37 +85,85 @@ class Admin extends CI_Controller {
         $this->load->view('admin/message', $data);
     }
 
-    public function chat($id_user) {
+    public function chat($id_user)
+    {
         $id_admin = $this->session->userdata('id_user');
+
         $room = $this->M_Message->getRoom($id_user, $id_admin);
 
         if (!$room) {
-            $id_chat = $this->M_Message->createRoom($id_user, $id_admin);
-        } else {
-            $id_chat = $room->id_chat;
+            show_404();
         }
 
-        $data['messages'] = $this->M_Message->getMessages($id_chat);
-        $data['id_chat'] = $id_chat;
-        $data['id_user'] = $id_user;
+        $id_chat = $room->id_chat;
 
-        // mark read
+        $data['messages'] = $this->M_Message->getMessages($id_chat);
+        $data['id_chat']  = $id_chat;
+        $data['id_user']  = $id_user;
+
+        // 🔥 TAMBAHAN INI
+        $data['user'] = $this->M_User->getById($id_user);
+
         $this->M_Message->markAsRead($id_chat, $id_admin);
+
         $this->load->view('admin/chat', $data);
     }
 
-    public function send_message() {
+    public function send_message()
+    {
         $data = [
             'id_chat'   => $this->input->post('id_chat'),
             'sender_id' => $this->session->userdata('id_user'),
-            'message'   => $this->input->post('message'),
+            'message'   => trim($this->input->post('message')),
             'is_read'   => 0,
             'sent_at'   => date('Y-m-d H:i:s')
         ];
 
+        if ($data['message'] == '') {
+            echo json_encode(['status'=>false]);
+            return;
+        }
+
         $this->M_Message->sendMessage($data);
+
+        header('Content-Type: application/json');
+        echo json_encode(['status'=>true]);
     }
 
+    public function load_rooms()
+    {
+        $id_admin = $this->session->userdata('id_user');
+
+        $rooms = $this->M_Message->getRoomsAdmin($id_admin);
+
+        header('Content-Type: application/json');
+        echo json_encode($rooms);
+    }
+    
+    public function load_chat($id_chat)
+    {
+        $id_admin = $this->session->userdata('id_user');
+
+        // validasi room milik admin
+        $room = $this->db
+            ->where('id_chat', $id_chat)
+            ->where('id_admin', $id_admin)
+            ->get('chat_rooms')
+            ->row();
+
+        if (!$room) {
+            echo json_encode([]);
+            return;
+        }
+
+        $messages = $this->M_Message->getMessages($id_chat);
+
+        // tandai dibaca
+        $this->M_Message->markAsRead($id_chat, $id_admin);
+
+        header('Content-Type: application/json');
+        echo json_encode($messages);
+    }
 
     public function payment() {
         $data['payment'] = $this->M_Payment->getAll();

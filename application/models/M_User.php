@@ -10,6 +10,15 @@ class M_User extends CI_Model {
     }
 
     public function insert($data) {
-return $this->db->insert('users', $data);
-}
+        return $this->db->insert('users', $data);
+    }
+
+    public function getById($id_user)
+    {
+        return $this->db
+            ->where('id_user', $id_user)
+            ->get('users')
+            ->row();
+    }
+
 }

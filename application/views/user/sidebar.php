@@ -55,7 +55,7 @@
 
 <div class="sidebar" style="width:220px;height:100vh;background:#1e1e2f;color:white;padding:20px;position:fixed;">
     
-    <h2 style="text-align:center;">Admin</h2>
+    <h2 style="text-align:center;">User</h2>
 
     <div class="menu">
         <a href="<?= base_url('user/dashboard') ?>"><i class="fa fa-home"></i> Dashboard</a>

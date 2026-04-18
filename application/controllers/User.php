@@ -5,7 +5,7 @@ class User extends CI_Controller {
         parent::__construct();
 
         // Load semua model
-        $this->load->model('M_Kamar');
+        $this->load->model('M_Kamar')   ;
         $this->load->model('M_Booking');
         $this->load->model('M_Message');
         $this->load->model('M_Payment');
@@ -253,5 +253,25 @@ class User extends CI_Controller {
         ]);
     }
 
+    public function load_chat()
+    {
+        $id_user  = $this->session->userdata('id_user');
+        $id_admin = 1;
+
+        $room = $this->M_Message->getRoom($id_user, $id_admin);
+
+        if (!$room) {
+            echo json_encode([]);
+            return;
+        }
+
+        $messages = $this->M_Message->getMessages($room->id_chat);
+
+        // tandai pesan admin sudah dibaca
+        $this->M_Message->markAsRead($room->id_chat, $id_user);
+
+        header('Content-Type: application/json');
+        echo json_encode($messages);
+    }
     
 }

@@ -1,60 +1,61 @@
-<?php $this->load->view('user/sidebar'); ?>
+<?php $this->load->view('admin/sidebar'); ?>
 
 <div class="content">
 <div class="card">
 
-<h2>Chat Admin</h2>
+<h2>Chat : <?= $user->name ?></h2>
 
 <div id="chatBox">
 
-<?php if($room): ?>
-    <?php foreach($messages as $m): ?>
+<?php foreach($messages as $m): ?>
 
-        <?php if($m->sender_id == $this->session->userdata('id_user')): ?>
-            <div class="me"><?= $m->message ?></div>
-        <?php else: ?>
-            <div class="admin"><?= $m->message ?></div>
-        <?php endif; ?>
+    <?php if($m->sender_id == $this->session->userdata('id_user')): ?>
+        <div class="me"><?= $m->message ?></div>
+    <?php else: ?>
+        <div class="user"><?= $m->message ?></div>
+    <?php endif; ?>
 
-    <?php endforeach; ?>
-<?php else: ?>
-    <p style="color:gray">Belum ada percakapan</p>
-<?php endif; ?>
+<?php endforeach; ?>
 
 </div>
 
 <form id="chatForm">
-    <input type="text" name="message" id="messageInput" placeholder="Tulis pesan..." required>
+
+    <input type="hidden" name="id_chat" value="<?= $id_chat ?>">
+
+    <input type="text" name="message" id="msg" placeholder="Tulis balasan..." required>
+
     <button type="submit">Kirim</button>
+
 </form>
 
 </div>
 </div>
 
+
 <style>
 #chatBox{
-    height:400px;
+    height:450px;
     overflow-y:auto;
     border:1px solid #ddd;
     padding:10px;
     margin-bottom:10px;
-    background:#f9f9f9;
+    background:#fafafa;
 }
 
 .me{
     background:#007bff;
-    color:white;
-    padding:8px 12px;
+    color:#fff;
+    padding:10px;
     border-radius:10px;
     margin:5px 0;
-    text-align:right;
     width:fit-content;
     margin-left:auto;
 }
 
-.admin{
-    background:#e5e5e5;
-    padding:8px 12px;
+.user{
+    background:#e4e4e4;
+    padding:10px;
     border-radius:10px;
     margin:5px 0;
     width:fit-content;
@@ -75,31 +76,15 @@
 }
 </style>
 
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-$("#chatForm").submit(function(e){
-    e.preventDefault();
-
-    $.ajax({
-        url:"<?= base_url('user/send_message') ?>",
-        type:"POST",
-        data:$(this).serialize(),
-        dataType:"json",
-        success:function(res){
-
-            if(res.status){
-                $("#messageInput").val('');
-                loadChat();
-            }
-        }
-    });
-});
 
 function loadChat()
 {
     $.ajax({
-        url:"<?= base_url('user/load_chat') ?>",
+        url:"<?= base_url('admin/load_chat/'.$id_chat) ?>",
         type:"GET",
         dataType:"json",
         success:function(res){
@@ -112,7 +97,7 @@ function loadChat()
                 if(r.sender_id == myid){
                     html += '<div class="me">'+r.message+'</div>';
                 }else{
-                    html += '<div class="admin">'+r.message+'</div>';
+                    html += '<div class="user">'+r.message+'</div>';
                 }
 
             });
@@ -123,6 +108,29 @@ function loadChat()
     });
 }
 
+$("#chatForm").submit(function(e){
+
+    e.preventDefault();
+
+    $.ajax({
+        url:"<?= base_url('admin/send_message') ?>",
+        type:"POST",
+        data:$(this).serialize(),
+        dataType:"json",
+        success:function(res){
+
+            if(res.status){
+                $("#msg").val('');
+                loadChat();
+            }
+
+        }
+    });
+
+});
+
+setInterval(loadChat,2000);
+
 loadChat();
-setInterval(loadChat, 2000);
+
 </script>
