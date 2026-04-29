@@ -24,19 +24,19 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   `id_booking` int(11) NOT NULL AUTO_INCREMENT,
   `id_user` int(11) DEFAULT NULL,
   `id_room` int(11) DEFAULT NULL,
-  `check_in` date DEFAULT NULL,
-  `check_out` date DEFAULT NULL,
-  `total_price` decimal(12,2) DEFAULT NULL,
-  `status` enum('pending','confirmed','cancelled','completed') DEFAULT 'pending',
+  `start_at` date DEFAULT NULL,
+  `status` enum('pending','approved','rejected','cancelled','completed') DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id_booking`),
   KEY `id_user` (`id_user`),
   KEY `id_room` (`id_room`),
   CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`),
   CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`id_room`) REFERENCES `rooms` (`id_room`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 -- Dumping data for table kos.bookings: ~0 rows (approximately)
+INSERT INTO `bookings` (`id_booking`, `id_user`, `id_room`, `start_at`, `status`, `created_at`) VALUES
+	(1, 2, 1, '2026-05-01', 'approved', '2026-04-14 21:23:51');
 
 -- Dumping structure for table kos.chat_messages
 CREATE TABLE IF NOT EXISTS `chat_messages` (
@@ -45,14 +45,21 @@ CREATE TABLE IF NOT EXISTS `chat_messages` (
   `sender_id` int(11) DEFAULT NULL,
   `message` text DEFAULT NULL,
   `sent_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_read` int(11) DEFAULT 0,
   PRIMARY KEY (`id_message`),
   KEY `id_chat` (`id_chat`),
   KEY `sender_id` (`sender_id`),
   CONSTRAINT `chat_messages_ibfk_1` FOREIGN KEY (`id_chat`) REFERENCES `chat_rooms` (`id_chat`),
   CONSTRAINT `chat_messages_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.chat_messages: ~0 rows (approximately)
+-- Dumping data for table kos.chat_messages: ~5 rows (approximately)
+INSERT INTO `chat_messages` (`id_message`, `id_chat`, `sender_id`, `message`, `sent_at`, `is_read`) VALUES
+	(1, 1, 2, 'test', '2026-04-19 22:58:07', 1),
+	(2, 1, 2, 'tes', '2026-04-19 22:58:58', 1),
+	(3, 1, 2, 'te', '2026-04-19 22:59:00', 1),
+	(4, 1, 2, 't', '2026-04-19 22:59:03', 1),
+	(5, 1, 1, 'ysa', '2026-04-21 07:04:38', 1);
 
 -- Dumping structure for table kos.chat_rooms
 CREATE TABLE IF NOT EXISTS `chat_rooms` (
@@ -65,9 +72,11 @@ CREATE TABLE IF NOT EXISTS `chat_rooms` (
   KEY `id_admin` (`id_admin`),
   CONSTRAINT `chat_rooms_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`),
   CONSTRAINT `chat_rooms_ibfk_2` FOREIGN KEY (`id_admin`) REFERENCES `users` (`id_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 -- Dumping data for table kos.chat_rooms: ~0 rows (approximately)
+INSERT INTO `chat_rooms` (`id_chat`, `id_user`, `id_admin`, `created_at`) VALUES
+	(1, 2, 1, '2026-04-19 22:58:07');
 
 -- Dumping structure for table kos.kos
 CREATE TABLE IF NOT EXISTS `kos` (
@@ -92,45 +101,56 @@ CREATE TABLE IF NOT EXISTS `payments` (
   `id_booking` int(11) DEFAULT NULL,
   `amount` decimal(12,2) DEFAULT NULL,
   `payment_method` varchar(50) DEFAULT NULL,
-  `payment_status` enum('unpaid','paid','failed') DEFAULT 'unpaid',
+  `payment_status` enum('paid','verified','rejected') DEFAULT 'paid',
   `payment_date` timestamp NULL DEFAULT NULL,
   `proof_of_payment` text DEFAULT NULL,
   PRIMARY KEY (`id_payment`),
   KEY `id_booking` (`id_booking`),
   CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`id_booking`) REFERENCES `bookings` (`id_booking`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 -- Dumping data for table kos.payments: ~0 rows (approximately)
+INSERT INTO `payments` (`id_payment`, `id_booking`, `amount`, `payment_method`, `payment_status`, `payment_date`, `proof_of_payment`) VALUES
+	(1, 1, 350000.00, 'transfer', 'verified', '2026-04-15 02:48:45', 'payment_1776246525.jpg');
 
 -- Dumping structure for table kos.reviews
 CREATE TABLE IF NOT EXISTS `reviews` (
   `id_review` int(11) NOT NULL AUTO_INCREMENT,
   `id_user` int(11) DEFAULT NULL,
-  `id_kos` int(11) DEFAULT NULL,
+  `id_room` int(11) DEFAULT NULL,
   `rating` int(11) DEFAULT NULL CHECK (`rating` >= 1 and `rating` <= 5),
   `review` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `id_booking` int(11) NOT NULL,
   PRIMARY KEY (`id_review`),
   KEY `id_user` (`id_user`),
-  KEY `id_kos` (`id_kos`),
-  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`),
-  CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`id_kos`) REFERENCES `kos` (`id_kos`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  KEY `FK_reviews_rooms` (`id_room`) USING BTREE,
+  KEY `FK__bookrev` (`id_booking`),
+  CONSTRAINT `FK__bookrev` FOREIGN KEY (`id_booking`) REFERENCES `bookings` (`id_booking`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `FK_reviews_rooms` FOREIGN KEY (`id_room`) REFERENCES `rooms` (`id_room`),
+  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
 -- Dumping data for table kos.reviews: ~0 rows (approximately)
+INSERT INTO `reviews` (`id_review`, `id_user`, `id_room`, `rating`, `review`, `created_at`, `id_booking`) VALUES
+	(1, 2, 1, 5, 'sadasdsadsad', '2026-04-29 01:18:27', 1);
 
 -- Dumping structure for table kos.room_images
 CREATE TABLE IF NOT EXISTS `room_images` (
   `id_image` int(11) NOT NULL AUTO_INCREMENT,
   `id_room` int(11) DEFAULT NULL,
-  `image_url` text DEFAULT NULL,
+  `image` text DEFAULT NULL,
   `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id_image`),
   KEY `id_room` (`id_room`),
   CONSTRAINT `room_images_ibfk_1` FOREIGN KEY (`id_room`) REFERENCES `rooms` (`id_room`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.room_images: ~0 rows (approximately)
+-- Dumping data for table kos.room_images: ~3 rows (approximately)
+INSERT INTO `room_images` (`id_image`, `id_room`, `image`, `uploaded_at`) VALUES
+	(1, 4, '49e95b968d5a4046f40b93a74e5c5639.png', '2026-04-23 05:27:47'),
+	(2, 1, '6a281af2feaccdc274acd39b40799225.png', '2026-04-23 05:27:47'),
+	(3, 4, '3da716dc536ec3c87e5b4b613d3db9cf.jpg', '2026-04-23 06:34:37');
 
 -- Dumping structure for table kos.rooms
 CREATE TABLE IF NOT EXISTS `rooms` (
@@ -144,11 +164,12 @@ CREATE TABLE IF NOT EXISTS `rooms` (
   PRIMARY KEY (`id_room`),
   KEY `id_kos` (`id_kos`),
   CONSTRAINT `rooms_ibfk_1` FOREIGN KEY (`id_kos`) REFERENCES `kos` (`id_kos`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.rooms: ~0 rows (approximately)
+-- Dumping data for table kos.rooms: ~3 rows (approximately)
 INSERT INTO `rooms` (`id_room`, `id_kos`, `room_number`, `price`, `status`, `description`, `created_at`) VALUES
-	(1, 1, '3', 350000.00, 'available', '.........', '2026-04-11 14:24:03');
+	(1, 1, '3', 350000.00, 'available', '.........', '2026-04-11 14:24:03'),
+	(4, NULL, '4', 350000.00, 'available', NULL, '2026-04-23 05:27:47');
 
 -- Dumping structure for table kos.users
 CREATE TABLE IF NOT EXISTS `users` (
