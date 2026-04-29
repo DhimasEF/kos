@@ -1,91 +1,154 @@
 <?php $this->load->view('admin/sidebar'); ?>
 <div class="content">
-    <div class="card">
+<div class="card">
 
-        <!-- HEADER -->
-        <div style="display:flex; justify-content:space-between;">
-            <h2><i class="fa fa-bed"></i> Manajemen Kamar</h2>
+<div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2><i class="fa fa-bed"></i> Manajemen Kamar</h2>
 
-            <button class="btn" onclick="openAddModal()">
-                <i class="fa fa-plus"></i> Tambah Kamar
-            </button>
+    <button class="btn" onclick="openAddModal()">
+        <i class="fa fa-plus"></i> Tambah Kamar
+    </button>
+</div>
+
+<br>
+
+<!-- GRID -->
+<div class="room-grid">
+<?php foreach ($kamar as $k): ?>
+    <div class="room-card">
+
+        <!-- IMAGE -->
+        <img src="<?= base_url('assets/uploads/content/'.($k->image ? $k->image : 'default.png')) ?>" class="room-img">
+
+        <!-- INFO -->
+        <h3>Kamar <?= $k->room_number ?></h3>
+        <p class="price">Rp <?= number_format($k->price) ?></p>
+
+        <!-- ACTION -->
+        <div class="actions">
+            <a href="<?= base_url('admin/kamar_detail/'.$k->id_room) ?>">
+                Detail
+            </a>
+
+            <button onclick="openEditModal(
+                '<?= $k->id_room ?>',
+                '<?= $k->room_number ?>',
+                '<?= $k->price ?>'
+            )">Edit</button>
+
+            <a href="<?= base_url('admin/kamar_delete/'.$k->id_room) ?>" 
+               onclick="return confirm('Yakin hapus?')">Hapus</a>
         </div>
 
-        <br>
-
-        <!-- TABLE -->
-        <table style="width:100%;">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nomor</th>
-                    <th>Harga</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                <?php foreach ($kamar as $k): ?>
-                <tr>
-                    <td><?= $k->id_room ?></td>
-                    <td><?= $k->room_number ?></td>
-                    <td>Rp <?= number_format($k->price) ?></td>
-                    <td>
-                        <button class="btn-edit"
-                            onclick="openEditModal('<?= $k->id_room ?>','<?= $k->room_number ?>','<?= $k->price ?>')">
-                            <i class="fa fa-pen"></i>
-                        </button>
-
-                        <a href="<?= base_url('admin/kamar_delete/'.$k->id_room) ?>"
-                           class="btn-delete"
-                           onclick="return confirm('Yakin hapus?')">
-                            <i class="fa fa-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-
     </div>
+<?php endforeach; ?>
 </div>
 
-<!-- ================= MODAL ADD ================= -->
+</div>
+</div>
+
 <div class="modal" id="addModal">
-    <div class="modal-content">
-        <h3>Tambah Kamar</h3>
+<div class="modal-content">
 
-        <form method="post" action="<?= base_url('admin/kamar_store') ?>">
-            <input type="text" name="room_number" placeholder="Nomor Kamar" required>
-            <input type="number" name="price" placeholder="Harga" required>
-            <button class="btn">Simpan</button>
-        </form>
+<h3>Tambah Kamar</h3>
 
-        <button onclick="closeModal('addModal')">Tutup</button>
-    </div>
+<form method="post" action="<?= base_url('admin/kamar_store') ?>" enctype="multipart/form-data">
+    <input type="text" name="room_number" placeholder="Nomor Kamar" required>
+    <input type="number" name="price" placeholder="Harga" required>
+
+    <label>Upload Gambar</label>
+    <input type="file" name="images[]" multiple onchange="previewImages(event)">
+
+    <div id="preview"></div>
+
+    <button class="btn">Simpan</button>
+</form>
+
+<button onclick="closeModal('addModal')">Tutup</button>
+
+</div>
 </div>
 
-<!-- ================= MODAL EDIT ================= -->
 <div class="modal" id="editModal">
-    <div class="modal-content">
-        <h3>Edit Kamar</h3>
+<div class="modal-content">
 
-        <form method="post" action="<?= base_url('admin/kamar_update') ?>">
-            <input type="hidden" name="id_room" id="edit_id">
+<h3>Edit Kamar</h3>
 
-            <input type="text" name="room_number" id="edit_room" required>
-            <input type="number" name="price" id="edit_price" required>
+<form method="post" action="<?= base_url('admin/kamar_update') ?>" enctype="multipart/form-data">
 
-            <button class="btn">Update</button>
-        </form>
+    <input type="hidden" name="id_room" id="edit_id">
 
-        <button onclick="closeModal('editModal')">Tutup</button>
-    </div>
+    <input type="text" name="room_number" id="edit_room">
+    <input type="number" name="price" id="edit_price">
+
+    <label>Upload Gambar Baru</label>
+    <input type="file" name="images[]" multiple onchange="previewImages(event)">
+
+    <div id="previewEdit"></div>
+
+    <button class="btn">Update</button>
+</form>
+
+<button onclick="closeModal('editModal')">Tutup</button>
+
+</div>
 </div>
 
 <!-- STYLE -->
 <style>
 table th, table td { padding:10px; }
+
+.room-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px,1fr));
+    gap:20px;
+}
+
+.room-card {
+    background:white;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    transition:0.3s;
+}
+
+.room-card:hover {
+    transform:translateY(-5px);
+}
+
+.room-img {
+    width:100%;
+    height:150px;
+    object-fit:cover;
+    border-radius:10px;
+}
+
+.price {
+    color:#28a745;
+    font-weight:bold;
+}
+
+.actions {
+    display:flex;
+    gap:5px;
+    margin-top:10px;
+}
+
+.actions button, .actions a {
+    padding:6px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    background:#007bff;
+    color:white;
+    text-decoration:none;
+}
+
+#preview img, #previewEdit img {
+    width:70px;
+    margin:5px;
+    border-radius:6px;
+}
 
 .btn {
     background:#007bff; color:white;
@@ -132,7 +195,33 @@ function openEditModal(id, room, price) {
     document.getElementById('editModal').style.display = 'block';
 }
 
+function openDetailModal(room, price, img) {
+    document.getElementById('detail_room').innerText = room;
+    document.getElementById('detail_price').innerText = new Intl.NumberFormat().format(price);
+    document.getElementById('detail_img').src = img;
+
+    document.getElementById('detailModal').style.display = 'block';
+}
+
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
+}
+
+// PREVIEW MULTI IMAGE
+function previewImages(event) {
+    let preview = event.target.closest('.modal-content').querySelector('div[id^="preview"]');
+    preview.innerHTML = "";
+
+    for (let file of event.target.files) {
+        let reader = new FileReader();
+
+        reader.onload = function(e) {
+            let img = document.createElement('img');
+            img.src = e.target.result;
+            preview.appendChild(img);
+        }
+
+        reader.readAsDataURL(file);
+    }
 }
 </script>

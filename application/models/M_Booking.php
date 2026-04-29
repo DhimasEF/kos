@@ -70,4 +70,29 @@ class M_Booking extends CI_Model {
             ->get()
             ->result();
     }
+
+    public function getByBooking($id_booking, $id_user)
+    {
+        return $this->db
+            ->where('id_booking', $id_booking)
+            ->where('id_user', $id_user)
+            ->get('reviews')
+            ->row();
+    }
+
+    public function store($data)
+    {
+        return $this->db->insert('reviews', $data);
+    }
+
+    public function getByRoom($id_room)
+    {
+        return $this->db
+            ->select('reviews.*, users.name')
+            ->join('users', 'users.id_user = reviews.id_user')
+            ->where('reviews.id_room', $id_room)
+            ->order_by('id_review', 'DESC')
+            ->get('reviews')
+            ->result();
+    }
 }

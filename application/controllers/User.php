@@ -68,14 +68,53 @@ class User extends CI_Controller {
         $id_user = $this->session->userdata('id_user');
         
         $data['booking'] = $this->M_Booking->getDetail($id_booking, $id_user);
+        $data['payment'] = $this->M_Booking->getDetailPayment($id_booking, $id_user);
 
         if (!$data['booking']) {
             show_404();
         }
 
+        $data['review'] = $this->M_Booking->getByBooking($id_booking, $id_user);
+
         $this->load->view('user/booking_detail', $data);
     }
 
+    public function review_store()
+    {
+        $id_user    = $this->session->userdata('id_user');
+        $id_booking = $this->input->post('id_booking');
+
+        $booking = $this->M_Booking->getDetail($id_booking, $id_user);
+        $payment = $this->M_Booking->getDetailPayment($id_booking, $id_user);
+
+        if (!$booking) {
+            show_404();
+        }
+
+        // hanya booking approved + sudah bayar verified
+        if ($booking->status != 'approved' || $payment->payment_status != 'verified') {
+            redirect('user/booking_detail/'.$id_booking);
+        }
+
+        // cek apakah sudah review
+        $cek = $this->M_Booking->getByBooking($id_booking, $id_user);
+
+        if (!$cek) {
+
+            $data = [
+                'id_booking' => $id_booking,
+                'id_user'    => $id_user,
+                'id_room'    => $booking->id_room,
+                'rating'     => $this->input->post('rating'),
+                'review'     => $this->input->post('review'),
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            $this->M_Booking->store($data);
+        }
+
+        redirect('user/booking_detail/'.$id_booking);
+    }
 
     // =====================
     // PAYMENT

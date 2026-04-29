@@ -29,26 +29,104 @@ class Admin extends CI_Controller {
         $this->load->view('admin/kamar', $data);
     }
 
-    public function kamar_store() {
+    public function kamar_store()
+    {
         $data = [
             'room_number' => $this->input->post('room_number'),
-            'price' => $this->input->post('price')
+            'price'       => $this->input->post('price')
         ];
 
         $this->db->insert('rooms', $data);
+        $id_room = $this->db->insert_id();
+
+        // upload multi image
+        if (!empty($_FILES['images']['name'][0])) {
+
+            $count = count($_FILES['images']['name']);
+
+            for ($i=0; $i<$count; $i++) {
+
+                $_FILES['file']['name']     = $_FILES['images']['name'][$i];
+                $_FILES['file']['type']     = $_FILES['images']['type'][$i];
+                $_FILES['file']['tmp_name'] = $_FILES['images']['tmp_name'][$i];
+                $_FILES['file']['error']    = $_FILES['images']['error'][$i];
+                $_FILES['file']['size']     = $_FILES['images']['size'][$i];
+
+                $config['upload_path']   = './assets/uploads/content/';
+                $config['allowed_types'] = 'jpg|jpeg|png|webp';
+                $config['encrypt_name']  = TRUE;
+
+                $this->load->library('upload', $config);
+                $this->upload->initialize($config);
+
+                if ($this->upload->do_upload('file')) {
+
+                    $up = $this->upload->data();
+
+                    $this->db->insert('room_images', [
+                        'id_room' => $id_room,
+                        'image'   => $up['file_name']
+                    ]);
+                }
+            }
+        }
+
         redirect('admin/kamar');
     }
 
-    public function kamar_update() {
+    public function kamar_detail($id)
+    {
+        $data['kamar'] = $this->M_Kamar->getById($id);
+
+        if (!$data['kamar']) {
+            show_404();
+        }
+
+        $this->load->view('admin/kamar_detail', $data);
+    }
+
+    public function kamar_update()
+    {
         $id = $this->input->post('id_room');
 
         $data = [
             'room_number' => $this->input->post('room_number'),
-            'price' => $this->input->post('price')
+            'price'       => $this->input->post('price')
         ];
 
         $this->db->where('id_room', $id);
         $this->db->update('rooms', $data);
+
+        if (!empty($_FILES['images']['name'][0])) {
+
+            $count = count($_FILES['images']['name']);
+
+            for ($i=0; $i<$count; $i++) {
+
+                $_FILES['file']['name']     = $_FILES['images']['name'][$i];
+                $_FILES['file']['type']     = $_FILES['images']['type'][$i];
+                $_FILES['file']['tmp_name'] = $_FILES['images']['tmp_name'][$i];
+                $_FILES['file']['error']    = $_FILES['images']['error'][$i];
+                $_FILES['file']['size']     = $_FILES['images']['size'][$i];
+
+                $config['upload_path']   = './assets/uploads/content/';
+                $config['allowed_types'] = 'jpg|jpeg|png|webp';
+                $config['encrypt_name']  = TRUE;
+
+                $this->load->library('upload', $config); // FIX
+                $this->upload->initialize($config);
+
+                if ($this->upload->do_upload('file')) {
+
+                    $up = $this->upload->data();
+
+                    $this->db->insert('room_images', [
+                        'id_room' => $id,
+                        'image'   => $up['file_name']
+                    ]);
+                }
+            }
+        }
 
         redirect('admin/kamar');
     }
@@ -166,8 +244,34 @@ class Admin extends CI_Controller {
     }
 
     public function payment() {
-        $data['payment'] = $this->M_Payment->getAll();
+        $data['payment'] = $this->M_Payment->getAllWithDetail();
         $this->load->view('admin/payment', $data);
+    }
+
+    public function payment_detail($id) {
+        $data['payment'] = $this->M_Payment->getById($id);
+
+        if (!$data['payment']) {
+            show_404();
+        }
+
+        $this->load->view('admin/payment_detail', $data);
+    }
+
+    // ✅ APPROVE
+    public function payment_approve($id) {
+        $this->db->where('id_payment', $id);
+        $this->db->update('payments', ['payment_status' => 'verified']);
+
+        redirect('admin/payment');
+    }
+
+    // ❌ REJECT
+    public function payment_reject($id) {
+        $this->db->where('id_payment', $id);
+        $this->db->update('payments', ['payment_status' => 'rejected']);
+
+        redirect('admin/payment');
     }
 
     public function user() {

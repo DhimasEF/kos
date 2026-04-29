@@ -1,177 +1,197 @@
 <?php $this->load->view('user/sidebar'); ?>
 
 <div class="content">
-    <div class="card">
+<div class="card">
 
-        <h2><i class="fa fa-file"></i> Detail Booking</h2>
+<h2><i class="fa fa-file"></i> Detail Booking</h2>
+<hr>
 
-        <hr>
+<h3>Informasi Kamar</h3>
+<p><b>Nomor Kamar:</b> <?= $booking->room_number ?></p>
+<p><b>Harga:</b> Rp <?= number_format($booking->price) ?></p>
 
-        <!-- INFO KAMAR -->
-        <h3>Informasi Kamar</h3>
-        <p><b>Nomor Kamar:</b> <?= $booking->room_number ?></p>
-        <p><b>Harga:</b> Rp <?= number_format($booking->price) ?></p>
+<hr>
 
-        <br>
+<h3>Status Booking</h3>
 
-        <!-- INFO BOOKING -->
-        <h3>Informasi Booking</h3>
-        <p><b>Tanggal Masuk:</b> <?= $booking->start_at ?></p>
-        <p><b>Dibuat:</b> <?= $booking->created_at ?></p>
+<?php if($booking->status=='pending'): ?>
+<div class="status pending">Menunggu Approval</div>
 
-        <p><b>Status Booking:</b></p>
+<?php elseif($booking->status=='approved'): ?>
+<div class="status approved">Booking Disetujui</div>
 
-        <?php if ($booking->status == 'pending'): ?>
-            <div class="status pending">
-                <i class="fa fa-clock"></i> Menunggu Konfirmasi Admin
-            </div>
+<?php else: ?>
+<div class="status rejected">Booking Ditolak</div>
+<?php endif; ?>
 
-        <?php elseif ($booking->status == 'approved'): ?>
-            <div class="status approved">
-                <i class="fa fa-check-circle"></i> Disetujui
-            </div>
+<br><br>
 
-        <?php elseif ($booking->status == 'rejected'): ?>
-            <div class="status rejected">
-                <i class="fa fa-times-circle"></i> Ditolak
-            </div>
-        <?php endif; ?>
+<h3>Pembayaran</h3>
 
-        <hr>
+<?php if($payment->payment_status=='verified'): ?>
+<div class="status approved">Pembayaran Terverifikasi</div>
 
-        <!-- PAYMENT SECTION -->
-        <h3>Pembayaran</h3>
+<?php elseif($payment->payment_status=='paid'): ?>
+<div class="status pending">Menunggu Verifikasi</div>
 
-        <?php if ($booking->status == 'approved'): ?>
+<?php else: ?>
+<div class="status rejected">Belum Bayar</div>
+<?php endif; ?>
 
-            <p>Status: <b>Belum Bayar</b></p>
 
-            <button class="btn-pay" onclick="openPaymentModal()">
-                <i class="fa fa-credit-card"></i> Bayar Sekarang
-            </button>
+<!-- ================= REVIEW ================= -->
 
-            <!-- ================= MODAL PAYMENT ================= -->
-            <div class="modal" id="paymentModal">
-                <div class="modal-content">
+<?php if(
+    $booking->status=='approved' &&
+    $payment->payment_status=='verified'
+): ?>
 
-                    <h3>Bayar Booking</h3>
+<hr>
+<h3><i class="fa fa-star"></i> Review</h3>
 
-                    <form method="post" action="<?= base_url('user/payment_store') ?>" enctype="multipart/form-data">
+<?php if($review): ?>
 
-                        <input type="hidden" name="id_booking" value="<?= $booking->id_booking ?>">
-
-                        <!-- AMOUNT -->
-                        <label>Total Bayar</label>
-                        <input type="number" name="amount" value="<?= $booking->price ?>" readonly>
-
-                        <!-- METHOD -->
-                        <label>Metode Pembayaran</label>
-                        <select name="payment_method" required>
-                            <option value="">-- Pilih --</option>
-                            <option value="transfer">Transfer Bank</option>
-                            <option value="ewallet">E-Wallet</option>
-                            <option value="cash">Cash</option>
-                        </select>
-
-                        <!-- UPLOAD -->
-                        <label>Bukti Pembayaran</label>
-                        <input type="file" name="proof" required>
-
-                        <br><br>
-
-                        <button class="btn">Kirim Pembayaran</button>
-                    </form>
-
-                    <br>
-                    <button onclick="closePaymentModal()">Tutup</button>
-
-                </div>
-            </div>
-
-        <?php elseif ($booking->status == 'pending'): ?>
-
-            <p style="color:orange;">Menunggu approval sebelum pembayaran</p>
-
-        <?php else: ?>
-
-            <p style="color:red;">Booking ditolak, tidak bisa lanjut pembayaran</p>
-
-        <?php endif; ?>
-
-        <br><br>
-
-        <a href="<?= base_url('user/booking') ?>" class="btn">Kembali</a>
-
+<div class="review-box">
+    <div class="star">
+        <?= str_repeat('⭐', $review->rating) ?>
     </div>
+
+    <p><?= $review->review ?></p>
+    <small><?= $review->created_at ?></small>
 </div>
 
+<?php else: ?>
+
+<button class="btn-review" onclick="openReviewModal()">
+    Beri Review
+</button>
+
+<?php endif; ?>
+
+<?php endif; ?>
+
+
+<a href="<?= base_url('user/booking') ?>" class="btn-back">
+    Kembali
+</a>
+
+</div>
+</div>
+
+
+
+<!-- MODAL REVIEW -->
+<div class="modal" id="reviewModal">
+<div class="modal-content">
+
+<h3>Beri Review</h3>
+
+<form method="post" action="<?= base_url('user/review_store') ?>">
+
+<input type="hidden" name="id_booking"
+value="<?= $booking->id_booking ?>">
+
+<label>Rating</label>
+<select name="rating" required>
+    <option value="">Pilih</option>
+    <option value="5">⭐⭐⭐⭐⭐</option>
+    <option value="4">⭐⭐⭐⭐</option>
+    <option value="3">⭐⭐⭐</option>
+    <option value="2">⭐⭐</option>
+    <option value="1">⭐</option>
+</select>
+
+<label>Ulasan</label>
+<textarea name="review" rows="5"
+placeholder="Tulis pengalaman anda..." required></textarea>
+
+<br><br>
+
+<button class="btn-save">Kirim Review</button>
+
+</form>
+
+<br>
+<button onclick="closeReviewModal()">Tutup</button>
+
+</div>
+</div>
+
+
+
 <style>
-.btn {
+.card{
+    background:#fff;
+    padding:25px;
+    border-radius:12px;
+}
+
+.status{
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:8px;
+    color:#fff;
+}
+
+.pending{background:#ffc107;color:#000;}
+.approved{background:#28a745;}
+.rejected{background:#dc3545;}
+
+.btn-back,.btn-review,.btn-save{
     background:#007bff;
-    color:white;
-    padding:8px 12px;
-    border-radius:6px;
-    text-decoration:none;
-}
-
-.btn-pay {
-    background:#28a745;
-    color:white;
+    color:#fff;
     padding:10px 15px;
-    border-radius:6px;
+    border:none;
+    border-radius:8px;
     text-decoration:none;
+    cursor:pointer;
 }
 
-.modal {
-    display:none;
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.5);
+.btn-review{
+    background:#28a745;
 }
 
-.modal-content {
-    background:white;
-    padding:20px;
-    width:350px;
-    margin:100px auto;
+.review-box{
+    background:#f8f9fa;
+    padding:15px;
     border-radius:10px;
 }
 
-select, input {
+.star{
+    font-size:22px;
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.5);
+}
+
+.modal-content{
+    background:#fff;
+    width:400px;
+    padding:20px;
+    margin:80px auto;
+    border-radius:12px;
+}
+
+select,textarea{
     width:100%;
     padding:10px;
     margin-top:10px;
 }
-
-/* STATUS */
-.status {
-    padding:10px;
-    border-radius:6px;
-    color:white;
-    display:inline-block;
-}
-
-.status.pending {
-    background:#ffc107;
-    color:black;
-}
-
-.status.approved {
-    background:#28a745;
-}
-
-.status.rejected {
-    background:#dc3545;
-}
 </style>
 
+
 <script>
-function openPaymentModal() {
-    document.getElementById('paymentModal').style.display = 'block';
+function openReviewModal(){
+    document.getElementById('reviewModal').style.display='block';
 }
 
-function closePaymentModal() {
-    document.getElementById('paymentModal').style.display = 'none';
+function closeReviewModal(){
+    document.getElementById('reviewModal').style.display='none';
 }
 </script>
