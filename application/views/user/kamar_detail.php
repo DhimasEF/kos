@@ -10,6 +10,30 @@
         <p><b>Harga:</b> Rp <?= number_format($kamar->price) ?></p>
 
         <br>
+        <?php if ($booking): ?>
+            <p><b>Penyewa:</b> <?= $penyewa->name ?? '-' ?></p>
+        <?php endif; ?>
+
+        <?php if ($booking): ?>
+
+            <p><b>Tanggal Masuk:</b> <?= $booking->start_at ?></p>
+            <p><b>Berlaku Sampai:</b> <?= $booking->end_at ?></p>
+
+        <?php endif; ?>
+
+        <?php if ($can_extend): ?>
+
+    <button class="btn-extend" onclick="openExtendModal()">
+        <i class="fa fa-clock"></i> Perpanjang Booking
+    </button>
+
+    <?php elseif ($booking && !$is_owner): ?>
+
+        <div class="status pending">
+            Kamar sedang disewa orang lain
+        </div>
+
+    <?php endif; ?>
 
         <!-- BUTTON BOOKING -->
         <br>
@@ -74,6 +98,28 @@
     </div>
 </div>
 
+<div class="modal" id="extendModal">
+    <div class="modal-content">
+
+        <h3>Perpanjang Booking</h3>
+
+        <form method="post" action="<?= base_url('user/booking_extend') ?>">
+
+            <input type="hidden" name="id_booking" value="<?= $booking->id_booking ?>">
+
+            <p>Perpanjang 1 bulan dari:
+                <b><?= $booking->end_at ?></b>
+            </p>
+
+            <button class="btn">Extend Sekarang</button>
+        </form>
+
+        <br>
+        <button onclick="closeExtendModal()">Tutup</button>
+
+    </div>
+</div>
+
 <style>
 .btn {
     background:#007bff;
@@ -123,5 +169,13 @@ function openModal() {
 
 function closeModal() {
     document.getElementById('bookingModal').style.display = 'none';
+}
+
+function openExtendModal() {
+    document.getElementById('extendModal').style.display = 'block';
+}
+
+function closeExtendModal() {
+    document.getElementById('extendModal').style.display = 'none';
 }
 </script>

@@ -14,49 +14,110 @@
         }
 
         .content {
-            margin-left: 240px;
+            margin-left: 260px;
             padding: 30px;
             width: 100%;
         }
 
-        .card {
-            background: white;
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background: linear-gradient(180deg, #00c6ff, #0072ff);
+            color: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .stats {
+            position: fixed;
             display: flex;
-            gap: 20px;
+            flex-direction: column;
         }
 
-        .stat-box {
-            flex: 1;
-            background: #007bff;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
+        /* PROFILE */
+        .profile {
             text-align: center;
+            margin-bottom: 30px;
         }
 
-        .btn {
-            padding: 10px 15px;
-            background: #007bff;
+        .profile img {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            border: 3px solid white;
+            object-fit: cover;
+        }
+
+        .profile h3 {
+            margin: 10px 0 5px;
+        }
+
+        .profile p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        /* MENU */
+        .menu {
+            margin-top: 20px;
+        }
+
+        .menu a {
+            display: block;
             color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            text-decoration: none;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* LOGOUT */
+        .logout {
+            margin: auto 0 15px 0;
+            text-decoration: none;
+            color: #ffecec;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .logout:hover {
+            background: rgba(255,0,0,0.2);
         }
     </style>
 </head>
 <body>
 
-<div class="sidebar" style="width:220px;height:100vh;background:#1e1e2f;color:white;padding:20px;position:fixed;">
-    
-    <h2 style="text-align:center;">User</h2>
+<?php
+    // fallback foto default
+    $default_foto = base_url('assets/img/default.png');
 
+    // cek foto dari DB
+    if (!empty($user->profil_picture)) {
+        $foto = base_url('./assets/uploads/profile/'.$user->profil_picture);
+    } else {
+        $foto = $default_foto;
+    }
+?>
+
+<div class="sidebar">
+
+    <!-- PROFILE -->
+    <div class="profile">
+        <img src="<?= $foto ?>">
+
+        <h3>
+            <?= !empty($user->name) ? $user->name : 'User' ?>
+        </h3>
+
+        <p>
+            <?= !empty($user->role) ? ucfirst($user->role) : 'User' ?>
+        </p>
+    </div>
+
+    <!-- MENU -->
     <div class="menu">
         <a href="<?= base_url('user/dashboard') ?>"><i class="fa fa-home"></i> Dashboard</a>
         <a href="<?= base_url('user/kamar') ?>"><i class="fa fa-bed"></i> Kamar</a>
@@ -65,24 +126,9 @@
         <a href="<?= base_url('user/message') ?>"><i class="fa fa-envelope"></i> Message</a>
     </div>
 
-    <br>
-
-    <a href="<?= base_url('auth/logout') ?>" style="color:red;">
+    <!-- LOGOUT -->
+    <a href="<?= base_url('auth/logout') ?>" class="logout">
         <i class="fa fa-sign-out-alt"></i> Logout
     </a>
+
 </div>
-
-<style>
-.menu a {
-    display: block;
-    color: white;
-    text-decoration: none;
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 6px;
-}
-
-.menu a:hover {
-    background: #007bff;
-}
-</style>

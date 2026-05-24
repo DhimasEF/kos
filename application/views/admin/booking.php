@@ -39,6 +39,11 @@
                                 <i class="fa fa-check"></i> Approved
                             </span>
 
+                        <?php elseif ($b->status == 'completed'): ?>
+                            <span class="status approved">
+                                <i class="fa fa-check"></i> Completed
+                            </span>
+
                         <?php else: ?>
                             <span class="status rejected">
                                 <i class="fa fa-times"></i> Rejected

@@ -29,7 +29,7 @@
                     <td>
 
                         <!-- DETAIL BUTTON -->
-                        <a href="<?= base_url('user/booking_detail/'.$k->id_room) ?>" class="btn-detail">
+                        <a href="<?= base_url('user/booking_detail/'.$k->id_booking) ?>" class="btn-detail">
                             <i class="fa fa-eye"></i> Detail
                         </a>
 

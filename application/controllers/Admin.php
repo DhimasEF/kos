@@ -131,8 +131,24 @@ class Admin extends CI_Controller {
         redirect('admin/kamar');
     }
 
-    public function kamar_delete($id) {
-        $this->db->delete('rooms', ['id_room' => $id]);
+    public function kamar_delete($id)
+    {
+        $imgs = $this->db->get_where('room_images', [
+            'id_room' => $id
+        ])->result();
+
+        foreach($imgs as $img){
+            $path = './assets/uploads/content/'.$img->image;
+
+            if(file_exists($path)){
+                unlink($path);
+            }
+        }
+
+        $this->db->delete('room_images', ['id_room'=>$id]);
+        $this->db->delete('reviews', ['id_room'=>$id]);
+        $this->db->delete('rooms', ['id_room'=>$id]);
+
         redirect('admin/kamar');
     }
 
@@ -259,9 +275,30 @@ class Admin extends CI_Controller {
     }
 
     // ✅ APPROVE
-    public function payment_approve($id) {
+    // ✅ APPROVE
+    public function payment_approve($id)
+    {
+        // ambil data payment dulu
+        $payment = $this->db
+            ->where('id_payment', $id)
+            ->get('payments')
+            ->row();
+
+        if (!$payment) {
+            show_404();
+        }
+
+        // update payment jadi verified
         $this->db->where('id_payment', $id);
-        $this->db->update('payments', ['payment_status' => 'verified']);
+        $this->db->update('payments', [
+            'payment_status' => 'verified'
+        ]);
+
+        // 🔥 update booking jadi complete
+        $this->db->where('id_booking', $payment->id_booking);
+        $this->db->update('bookings', [
+            'status' => 'completed'
+        ]);
 
         redirect('admin/payment');
     }

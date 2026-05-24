@@ -18,24 +18,105 @@ class User extends CI_Controller {
     }
 
     public function dashboard() {
-        $data['total_kamar']   = $this->db->count_all('rooms');
-        $data['total_booking'] = $this->db->count_all('bookings');
-        $data['total_user']    = $this->db->count_all('users');
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
+        
+        $id = $this->session->userdata('id_user');
+        $data['total_booking'] = $this->db
+                ->where('id_user', $id)
+                ->count_all_results('bookings');
+
+        // booking aktif (masih sewa)
+        $data['booking_active'] = $this->db
+            ->where('id_user', $id)
+            ->where('status', 'active')
+            ->count_all_results('bookings');
+
+        $this->load->view('user/sidebar', $data);
         $this->load->view('user/dashboard', $data);
+    }
+
+    public function update_profile()
+    {
+        $id = $this->session->userdata('id_user');
+
+        $data = [
+            'name' => $this->input->post('name'),
+            'email' => $this->input->post('email'),
+        ];
+
+        // upload foto
+        if (!empty($_FILES['foto']['name'])) {
+
+            $config['upload_path'] = './assets/uploads/profile/';
+            $config['allowed_types'] = 'jpg|png|jpeg';
+            $config['file_name'] = time();
+
+            $this->load->library('upload', $config);
+
+            if ($this->upload->do_upload('foto')) {
+                $data['profil_picture'] = $this->upload->data('file_name');
+            }
+        }
+
+        $this->db->where('id_user', $id);
+        $this->db->update('users', $data);
+
+        redirect('user/dashboard');
     }
 
     public function kamar() {
         $data['kamar'] = $this->M_Kamar->getAll();
+        $this->load->view('user/sidebar', $data);
         $this->load->view('user/kamar', $data);
     }
 
-    public function kamar_detail($id) {
+    public function kamar_detail($id_room)
+    {
         $id_user = $this->session->userdata('id_user');
 
-        $data['kamar'] = $this->M_Kamar->getById($id);
+        $data['kamar'] = $this->M_Kamar->getById($id_room);
 
-        // cek booking user untuk kamar ini
-        $data['booking'] = $this->M_Booking->getByUserAndRoom($id_user, $id);
+        $booking = $this->db
+            ->where('id_room', $id_room)
+            ->where_in('status', ['approved','completed'])
+            ->order_by('end_at', 'DESC')
+            ->get('bookings')
+            ->row();
+
+        $data['booking'] = $booking;
+
+        // default
+        $data['can_extend'] = false;
+        $data['is_owner']   = false;
+
+        if ($booking) {
+
+            // cek pemilik
+            if ($booking->id_user == $id_user) {
+                $data['is_owner'] = true;
+            }
+
+            $today   = date('Y-m-d');
+            $expired = $booking->end_at;
+
+            $h_minus_10 = date('Y-m-d', strtotime($expired . ' -10 days'));
+
+            if (
+                $booking->id_user == $id_user &&
+                $today >= $h_minus_10 &&
+                $today <= $expired
+            ) {
+                $data['can_extend'] = true;
+            }
+        }
+
+        // 🔥 ambil nama penyewa
+        if ($booking) {
+            $data['penyewa'] = $this->M_User->getById($booking->id_user);
+        }
+
         $this->load->view('user/kamar_detail', $data);
     }
 
@@ -62,6 +143,41 @@ class User extends CI_Controller {
 
         $data['kamar'] = $this->M_Booking->getByUser($id_user);
         $this->load->view('user/booking', $data);
+    }
+
+    public function booking_extend()
+    {
+        $id_booking = $this->input->post('id_booking');
+        $id_user    = $this->session->userdata('id_user');
+
+        $booking = $this->db->get_where('bookings', [
+            'id_booking' => $id_booking
+        ])->row();
+
+        if (!$booking) show_404();
+
+        // 🔥 VALIDASI: hanya pemilik
+        if ($booking->id_user != $id_user) {
+            show_error('Bukan booking kamu');
+        }
+
+        // 🔥 hitung tanggal baru
+        $start = $booking->end_at;
+        $end   = date('Y-m-d', strtotime($start . ' +1 month'));
+
+        // 🔥 INSERT booking baru (EXTEND)
+        $this->db->insert('bookings', [
+            'id_room'   => $booking->id_room,
+            'id_user'   => $id_user,
+            'start_at'  => $start,
+            'end_at'    => $end,
+            'status'    => 'pending',
+            'type'      => 'extend',
+            'parent_booking' => $booking->id_booking,
+            'created_at'=> date('Y-m-d H:i:s')
+        ]);
+
+        redirect('user/booking');
     }
 
     public function booking_detail($id_booking) {

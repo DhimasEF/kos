@@ -1,0 +1,6 @@
+. complete booking == payment verified
+. extended booking h-10 day expired booking start
+. status room booked == payment verified + cmplte booking"
+. menu user (monitoring only)
+. edit profil + profil_picture
+. footer + styling repaired
