@@ -15,7 +15,7 @@
 
         .content {
             margin-left: 260px;
-            padding: 30px;
+            padding: 0 30px 30px 30px;
             width: 100%;
         }
 

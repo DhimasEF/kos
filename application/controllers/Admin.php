@@ -18,13 +18,52 @@ class Admin extends CI_Controller {
     }
 
     public function dashboard() {
+        $id_user = $this->session->userdata('id_user');
+        $today   = date('Y-m-d');
+
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $id_user
+        ])->row();
+
         $data['total_kamar']   = $this->db->count_all('rooms');
         $data['total_booking'] = $this->db->count_all('bookings');
         $data['total_user']    = $this->db->count_all('users');
         $this->load->view('admin/dashboard', $data);
     }
 
+    public function update_profile()
+    {
+        $id = $this->session->userdata('id_user');
+
+        $data = [
+            'name' => $this->input->post('name'),
+            'email' => $this->input->post('email'),
+        ];
+
+        // upload foto
+        if (!empty($_FILES['foto']['name'])) {
+
+            $config['upload_path'] = './assets/uploads/profile/';
+            $config['allowed_types'] = 'jpg|png|jpeg';
+            $config['file_name'] = time();
+
+            $this->load->library('upload', $config);
+
+            if ($this->upload->do_upload('foto')) {
+                $data['profil_picture'] = $this->upload->data('file_name');
+            }
+        }
+
+        $this->db->where('id_user', $id);
+        $this->db->update('users', $data);
+
+        redirect('admin/dashboard');
+    }
+
     public function kamar() {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $data['kamar'] = $this->M_Kamar->getAll();
         $this->load->view('admin/kamar', $data);
     }
@@ -87,6 +126,9 @@ class Admin extends CI_Controller {
 
     public function kamar_update()
     {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $id = $this->input->post('id_room');
 
         $data = [
@@ -153,6 +195,9 @@ class Admin extends CI_Controller {
     }
 
     public function booking() {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $data['booking'] = $this->M_Booking->getAllWithDetail();
         $this->load->view('admin/booking', $data);
     }

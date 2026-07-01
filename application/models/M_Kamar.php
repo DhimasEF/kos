@@ -49,7 +49,7 @@ class M_Kamar extends CI_Model {
                 ) as total_review,
 
                 (
-                    SELECT IFNULL(AVG(rv.rating),0)
+                    SELECT IFNULL(AVG(rv.rating), 0)
                     FROM reviews rv
                     WHERE rv.id_room = rooms.id_room
                 ) as avg_rating
@@ -60,14 +60,11 @@ class M_Kamar extends CI_Model {
             ->row();
 
         if ($room) {
-
-            /* semua gambar kamar */
             $room->images = $this->db
                 ->where('id_room', $id)
                 ->get('room_images')
                 ->result();
 
-            /* semua review */
             $room->reviews = $this->db
                 ->select('reviews.*, users.name')
                 ->from('reviews')
@@ -79,5 +76,21 @@ class M_Kamar extends CI_Model {
         }
 
         return $room;
+    }
+
+    public function getActiveBookingByRoom($id_room)
+    {
+        $today = date('Y-m-d');
+
+        return $this->db
+            ->select('bookings.*, users.name as penyewa_name')
+            ->from('bookings')
+            ->join('users', 'users.id_user = bookings.id_user', 'left')
+            ->where('bookings.id_room', $id_room)
+            ->where('bookings.status', 'completed')
+            ->where('bookings.end_at >=', $today)
+            ->order_by('bookings.end_at', 'DESC')
+            ->get()
+            ->row();
     }
 }

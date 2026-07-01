@@ -17,20 +17,26 @@ class User extends CI_Controller {
         }
     }
 
-    public function dashboard() {
-        $data['user'] = $this->db->get_where('users', [
-            'id_user' => $this->session->userdata('id_user')
-        ])->row();
-        
-        $id = $this->session->userdata('id_user');
-        $data['total_booking'] = $this->db
-                ->where('id_user', $id)
-                ->count_all_results('bookings');
+    public function dashboard()
+    {
+        $id_user = $this->session->userdata('id_user');
+        $today   = date('Y-m-d');
 
-        // booking aktif (masih sewa)
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $id_user
+        ])->row();
+
+        // Total semua booking milik user
+        $data['total_booking'] = $this->db
+            ->where('id_user', $id_user)
+            ->count_all_results('bookings');
+
+        // Booking aktif / sedang menyewa
+        // Hanya booking approved dan tanggal sewa belum lewat
         $data['booking_active'] = $this->db
-            ->where('id_user', $id)
-            ->where('status', 'active')
+            ->where('id_user', $id_user)
+            ->where('status', 'completed')
+            ->where('end_at >=', $today)
             ->count_all_results('bookings');
 
         $this->load->view('user/sidebar', $data);
@@ -67,6 +73,10 @@ class User extends CI_Controller {
     }
 
     public function kamar() {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
+
         $data['kamar'] = $this->M_Kamar->getAll();
         $this->load->view('user/sidebar', $data);
         $this->load->view('user/kamar', $data);
@@ -75,32 +85,37 @@ class User extends CI_Controller {
     public function kamar_detail($id_room)
     {
         $id_user = $this->session->userdata('id_user');
+        $today   = date('Y-m-d');
+
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $id_user
+        ])->row();
 
         $data['kamar'] = $this->M_Kamar->getById($id_room);
 
-        $booking = $this->db
-            ->where('id_room', $id_room)
-            ->where_in('status', ['approved','completed'])
-            ->order_by('end_at', 'DESC')
-            ->get('bookings')
-            ->row();
+        // Hanya ambil booking yang masih aktif.
+        // Kalau booking sudah completed atau end_at sudah lewat, kamar dianggap tersedia lagi.
+        $booking = $this->M_Kamar->getActiveBookingByRoom($id_room);
 
-        $data['booking'] = $booking;
-
-        // default
-        $data['can_extend'] = false;
-        $data['is_owner']   = false;
+        $data['booking']      = $booking;
+        $data['is_owner']     = false;
+        $data['can_extend']   = false;
+        $data['can_booking']  = true;
+        $data['room_status']  = 'available';
+        $data['penyewa']      = null;
 
         if ($booking) {
+            $data['can_booking'] = false;
+            $data['penyewa']     = $this->M_User->getById($booking->id_user);
 
-            // cek pemilik
             if ($booking->id_user == $id_user) {
-                $data['is_owner'] = true;
+                $data['is_owner']    = true;
+                $data['room_status'] = 'booked_self';
+            } else {
+                $data['room_status'] = 'booked_other';
             }
 
-            $today   = date('Y-m-d');
-            $expired = $booking->end_at;
-
+            $expired    = $booking->end_at;
             $h_minus_10 = date('Y-m-d', strtotime($expired . ' -10 days'));
 
             if (
@@ -110,11 +125,6 @@ class User extends CI_Controller {
             ) {
                 $data['can_extend'] = true;
             }
-        }
-
-        // 🔥 ambil nama penyewa
-        if ($booking) {
-            $data['penyewa'] = $this->M_User->getById($booking->id_user);
         }
 
         $this->load->view('user/kamar_detail', $data);
@@ -139,6 +149,9 @@ class User extends CI_Controller {
     }
 
     public function booking() {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $id_user = $this->session->userdata('id_user');
 
         $data['kamar'] = $this->M_Booking->getByUser($id_user);
@@ -182,6 +195,9 @@ class User extends CI_Controller {
 
     public function booking_detail($id_booking) {
         $id_user = $this->session->userdata('id_user');
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         
         $data['booking'] = $this->M_Booking->getDetail($id_booking, $id_user);
         $data['payment'] = $this->M_Booking->getDetailPayment($id_booking, $id_user);
@@ -236,10 +252,14 @@ class User extends CI_Controller {
     // PAYMENT
     // =====================
     public function payment() {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $id_user = $this->session->userdata('id_user');
 
         $data['payment'] = $this->M_Booking->getPaymentByUser($id_user);
 
+        $this->load->view('user/sidebar', $data);
         $this->load->view('user/payment', $data);
     }
 
@@ -292,10 +312,14 @@ class User extends CI_Controller {
     }
 
     public function payment_detail($id_booking) {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $id_user = $this->session->userdata('id_user');
 
         $data['payment'] = $this->M_Booking->getDetailPayment($id_booking, $id_user);
 
+        $this->load->view('user/sidebar', $data);
         $this->load->view('user/payment_detail', $data);
     }
 
@@ -351,22 +375,26 @@ class User extends CI_Controller {
         redirect('user/payment');
     }
 
-    public function message() {
+    public function message()
+    {
         $id_user  = $this->session->userdata('id_user');
         $id_admin = 1;
 
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $id_user
+        ])->row();
+
         $room = $this->M_Message->getRoom($id_user, $id_admin);
 
-        $data['room'] = $room;
+        $data['room']     = $room;
+        $data['messages'] = [];
+        $data['id_chat']  = 0;
 
         if ($room) {
             $data['messages'] = $this->M_Message->getMessages($room->id_chat);
             $data['id_chat']  = $room->id_chat;
 
             $this->M_Message->markAsRead($room->id_chat, $id_user);
-        } else {
-            $data['messages'] = [];
-            $data['id_chat'] = 0;
         }
 
         $this->load->view('user/message', $data);
@@ -374,42 +402,47 @@ class User extends CI_Controller {
 
     public function send_message()
     {
+        header('Content-Type: application/json');
+
         $id_user  = $this->session->userdata('id_user');
         $id_admin = 1;
-
-        $message = trim($this->input->post('message'));
+        $message  = trim($this->input->post('message'));
 
         if ($message == '') {
-            echo json_encode(['status' => false]);
+            echo json_encode([
+                'status'  => false,
+                'message' => 'Pesan tidak boleh kosong'
+            ]);
             return;
         }
 
         $room = $this->M_Message->getRoom($id_user, $id_admin);
 
-        if (!$room) {
-            $id_chat = $this->M_Message->createRoom($id_user, $id_admin);
-        } else {
+        if ($room) {
             $id_chat = $room->id_chat;
+        } else {
+            $id_chat = $this->M_Message->createRoom($id_user, $id_admin);
         }
 
-        $data = [
+        $id_message = $this->M_Message->sendMessage([
             'id_chat'   => $id_chat,
             'sender_id' => $id_user,
             'message'   => $message,
             'is_read'   => 0,
             'sent_at'   => date('Y-m-d H:i:s')
-        ];
-
-        $this->M_Message->sendMessage($data);
+        ]);
 
         echo json_encode([
-            'status' => true,
-            'id_chat' => $id_chat
+            'status'     => true,
+            'id_chat'    => $id_chat,
+            'id_message' => $id_message
         ]);
     }
 
     public function load_chat()
     {
+        header('Content-Type: application/json');
+
         $id_user  = $this->session->userdata('id_user');
         $id_admin = 1;
 
@@ -422,10 +455,8 @@ class User extends CI_Controller {
 
         $messages = $this->M_Message->getMessages($room->id_chat);
 
-        // tandai pesan admin sudah dibaca
         $this->M_Message->markAsRead($room->id_chat, $id_user);
 
-        header('Content-Type: application/json');
         echo json_encode($messages);
     }
     

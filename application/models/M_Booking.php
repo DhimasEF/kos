@@ -5,9 +5,35 @@ class M_Booking extends CI_Model {
         return $this->db->get('bookings')->result();
     }
 
-    public function getAllWithDetail() {
+    public function getAllWithDetail()
+    {
         return $this->db
-            ->select('bookings.*, users.name, rooms.room_number')
+            ->select('
+                bookings.*,
+                users.name,
+                rooms.room_number,
+                rooms.price,
+
+                (
+                    SELECT ri.image
+                    FROM room_images ri
+                    WHERE ri.id_room = rooms.id_room
+                    ORDER BY ri.id_image ASC
+                    LIMIT 1
+                ) as image,
+
+                (
+                    SELECT COUNT(rv.id_review)
+                    FROM reviews rv
+                    WHERE rv.id_room = rooms.id_room
+                ) as total_review,
+
+                (
+                    SELECT IFNULL(AVG(rv.rating), 0)
+                    FROM reviews rv
+                    WHERE rv.id_room = rooms.id_room
+                ) as avg_rating
+            ')
             ->from('bookings')
             ->join('users', 'users.id_user = bookings.id_user')
             ->join('rooms', 'rooms.id_room = bookings.id_room')
@@ -21,11 +47,41 @@ class M_Booking extends CI_Model {
     }
 
     // optional (buat next fitur)
-    public function getByUser($id_user) {
+    public function getByUser($id_user)
+    {
         return $this->db
+            ->select('
+                bookings.*,
+                rooms.*,
+
+                /* ambil 1 gambar utama */
+                (
+                    SELECT ri.image
+                    FROM room_images ri
+                    WHERE ri.id_room = rooms.id_room
+                    ORDER BY ri.id_image ASC
+                    LIMIT 1
+                ) as image,
+
+                /* jumlah review */
+                (
+                    SELECT COUNT(rv.id_review)
+                    FROM reviews rv
+                    WHERE rv.id_room = rooms.id_room
+                ) as total_review,
+
+                /* rata-rata rating */
+                (
+                    SELECT IFNULL(AVG(rv.rating),0)
+                    FROM reviews rv
+                    WHERE rv.id_room = rooms.id_room
+                ) as avg_rating
+            ')
+            ->from('bookings')
             ->join('rooms', 'rooms.id_room = bookings.id_room')
             ->where('bookings.id_user', $id_user)
-            ->get('bookings')
+            ->order_by('bookings.id_booking', 'DESC')
+            ->get()
             ->result();
     }
 
@@ -37,9 +93,37 @@ class M_Booking extends CI_Model {
             ->row();
     }
 
-    public function getDetail($id_booking, $id_user) {
+    public function getDetail($id_booking, $id_user)
+    {
         return $this->db
-            ->select('bookings.*, rooms.room_number, rooms.price')
+            ->select('
+                bookings.*,
+                bookings.status as booking_status,
+                rooms.*,
+
+                /* ambil 1 gambar utama */
+                (
+                    SELECT ri.image
+                    FROM room_images ri
+                    WHERE ri.id_room = rooms.id_room
+                    ORDER BY ri.id_image ASC
+                    LIMIT 1
+                ) as image,
+
+                /* jumlah review */
+                (
+                    SELECT COUNT(rv.id_review)
+                    FROM reviews rv
+                    WHERE rv.id_room = rooms.id_room
+                ) as total_review,
+
+                /* rata-rata rating */
+                (
+                    SELECT IFNULL(AVG(rv.rating),0)
+                    FROM reviews rv
+                    WHERE rv.id_room = rooms.id_room
+                ) as avg_rating
+            ')
             ->from('bookings')
             ->join('rooms', 'rooms.id_room = bookings.id_room')
             ->where('bookings.id_booking', $id_booking)

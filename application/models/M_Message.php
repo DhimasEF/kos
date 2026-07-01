@@ -1,36 +1,62 @@
 <?php
-class M_Message extends CI_Model {
-
-    // ======================
-    // GET / CREATE ROOM
-    // ======================
-    public function getRoom($id_user,$id_admin)
+class M_Message extends CI_Model
+{
+    public function getRoom($id_user, $id_admin)
     {
         return $this->db
-            ->where('id_user',$id_user)
-            ->where('id_admin',$id_admin)
+            ->where('id_user', $id_user)
+            ->where('id_admin', $id_admin)
             ->get('chat_rooms')
             ->row();
+    }
+
+    public function createRoom($id_user, $id_admin)
+    {
+        $room = $this->getRoom($id_user, $id_admin);
+
+        if ($room) {
+            return $room->id_chat;
+        }
+
+        $this->db->insert('chat_rooms', [
+            'id_user'    => $id_user,
+            'id_admin'   => $id_admin,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        return $this->db->insert_id();
     }
 
     public function getMessages($id_chat)
     {
         return $this->db
-            ->order_by('sent_at','ASC')
-            ->get_where('chat_messages',['id_chat'=>$id_chat])
+            ->select('
+                id_message,
+                id_chat,
+                sender_id,
+                message,
+                is_read,
+                sent_at
+            ')
+            ->where('id_chat', $id_chat)
+            ->order_by('sent_at', 'ASC')
+            ->order_by('id_message', 'ASC')
+            ->get('chat_messages')
             ->result();
     }
 
     public function sendMessage($data)
     {
-        $this->db->insert('chat_messages',$data);
+        $this->db->insert('chat_messages', $data);
+        return $this->db->insert_id();
     }
 
-    public function markAsRead($id_chat,$receiver_id)
+    public function markAsRead($id_chat, $receiver_id)
     {
-        $this->db->where('id_chat',$id_chat);
-        $this->db->where('sender_id !=',$receiver_id);
-        $this->db->update('chat_messages',['is_read'=>1]);
+        return $this->db
+            ->where('id_chat', $id_chat)
+            ->where('sender_id !=', $receiver_id)
+            ->update('chat_messages', ['is_read' => 1]);
     }
 
     public function getRoomsAdmin($id_admin)
@@ -79,27 +105,8 @@ class M_Message extends CI_Model {
         ")->result();
     }
 
-    public function createRoom($id_user, $id_admin)
+    public function getRoomByUser($id_user, $id_admin)
     {
-        // cek dulu biar tidak double room
-        $cek = $this->getRoom($id_user, $id_admin);
-
-        if ($cek) {
-            return $cek->id_chat;
-        }
-
-        $data = [
-            'id_user'     => $id_user,
-            'id_admin'    => $id_admin,
-            'created_at'  => date('Y-m-d H:i:s')
-        ];
-
-        $this->db->insert('chat_rooms', $data);
-
-        return $this->db->insert_id();
-    }
-
-    public function getRoomByUser($id_user, $id_admin) {
         return $this->getRoom($id_user, $id_admin);
     }
 }

@@ -1,227 +1,536 @@
 <?php $this->load->view('admin/sidebar'); ?>
+
 <div class="content">
-<div class="card">
 
-<div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2><i class="fa fa-bed"></i> Manajemen Kamar</h2>
+    <!-- HEADER -->
+    <div class="page-header">
+        <div>
+            <h2>
+                <i class="fa fa-bed"></i>
+                Manajemen Kamar
+            </h2>
 
-    <button class="btn" onclick="openAddModal()">
-        <i class="fa fa-plus"></i> Tambah Kamar
-    </button>
-</div>
-
-<br>
-
-<!-- GRID -->
-<div class="room-grid">
-<?php foreach ($kamar as $k): ?>
-    <div class="room-card">
-
-        <!-- IMAGE -->
-        <img src="<?= base_url('assets/uploads/content/'.($k->image ? $k->image : 'default.png')) ?>" class="room-img">
-
-        <!-- INFO -->
-        <h3>Kamar <?= $k->room_number ?></h3>
-        <p class="price">Rp <?= number_format($k->price) ?></p>
-
-        <!-- ACTION -->
-        <div class="actions">
-            <a href="<?= base_url('admin/kamar_detail/'.$k->id_room) ?>">
-                Detail
-            </a>
-
-            <button onclick="openEditModal(
-                '<?= $k->id_room ?>',
-                '<?= $k->room_number ?>',
-                '<?= $k->price ?>'
-            )">Edit</button>
-
-            <a href="<?= base_url('admin/kamar_delete/'.$k->id_room) ?>" 
-               onclick="return confirm('Yakin hapus?')">Hapus</a>
+            <p>
+                Kelola data kamar, harga, gambar, dan detail kamar kos.
+            </p>
         </div>
 
+        <button type="button" class="btn-add" onclick="openAddModal()">
+            <i class="fa fa-plus"></i>
+            Tambah Kamar
+        </button>
     </div>
-<?php endforeach; ?>
-</div>
+
+    <!-- GRID CARD -->
+    <div class="room-grid">
+
+        <?php foreach ($kamar as $k): ?>
+
+            <div class="room-card">
+
+                <!-- IMAGE -->
+                <div class="room-image">
+                    <?php if (!empty($k->image)): ?>
+                        <img
+                            src="<?= base_url('assets/uploads/content/'.$k->image) ?>"
+                            alt="Kamar <?= $k->room_number ?>">
+                    <?php else: ?>
+                        <img
+                            src="<?= base_url('assets/uploads/content/default.png') ?>"
+                            alt="Kamar <?= $k->room_number ?>">
+                    <?php endif; ?>
+
+                    <div class="room-overlay">
+                        <span>#<?= $k->room_number ?></span>
+                    </div>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="room-content">
+
+                    <h3>Kamar No. <?= $k->room_number ?></h3>
+
+                    <div class="price">
+                        Rp <?= number_format($k->price, 0, ',', '.') ?>
+                        <small>/ bulan</small>
+                    </div>
+
+                    <div class="room-info">
+                        <span><i class="fa fa-wifi"></i> Wifi</span>
+                        <span><i class="fa fa-snowflake"></i> AC</span>
+                        <span><i class="fa fa-bath"></i> Bathroom</span>
+                    </div>
+
+                    <!-- ACTION -->
+                    <div class="actions">
+
+                        <a
+                            href="<?= base_url('admin/kamar_detail/'.$k->id_room) ?>"
+                            class="btn-detail">
+                            <i class="fa fa-eye"></i>
+                            Detail
+                        </a>
+
+                        <button
+                            type="button"
+                            class="btn-edit"
+                            onclick="openEditModal(
+                                '<?= $k->id_room ?>',
+                                '<?= $k->room_number ?>',
+                                '<?= $k->price ?>'
+                            )">
+                            <i class="fa fa-edit"></i>
+                            Edit
+                        </button>
+
+                        <a
+                            href="<?= base_url('admin/kamar_delete/'.$k->id_room) ?>"
+                            class="btn-delete"
+                            onclick="return confirm('Yakin hapus kamar ini?')">
+                            <i class="fa fa-trash"></i>
+                            Hapus
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        <?php endforeach; ?>
+
+    </div>
 
 </div>
-</div>
 
+<!-- MODAL TAMBAH -->
 <div class="modal" id="addModal">
-<div class="modal-content">
+    <div class="modal-content">
 
-<h3>Tambah Kamar</h3>
+        <h3>
+            <i class="fa fa-plus"></i>
+            Tambah Kamar
+        </h3>
 
-<form method="post" action="<?= base_url('admin/kamar_store') ?>" enctype="multipart/form-data">
-    <input type="text" name="room_number" placeholder="Nomor Kamar" required>
-    <input type="number" name="price" placeholder="Harga" required>
+        <form method="post" action="<?= base_url('admin/kamar_store') ?>" enctype="multipart/form-data">
 
-    <label>Upload Gambar</label>
-    <input type="file" name="images[]" multiple onchange="previewImages(event)">
+            <label>Nomor Kamar</label>
+            <input
+                type="text"
+                name="room_number"
+                placeholder="Masukkan nomor kamar"
+                required>
 
-    <div id="preview"></div>
+            <label>Harga</label>
+            <input
+                type="number"
+                name="price"
+                placeholder="Masukkan harga kamar"
+                required>
 
-    <button class="btn">Simpan</button>
-</form>
+            <label>Upload Gambar</label>
+            <input
+                type="file"
+                name="images[]"
+                multiple
+                onchange="previewImages(event)">
 
-<button onclick="closeModal('addModal')">Tutup</button>
+            <div id="preview" class="preview-wrap"></div>
 
+            <button type="submit" class="btn-save">
+                Simpan
+            </button>
+
+            <button type="button" class="btn-close" onclick="closeModal('addModal')">
+                Tutup
+            </button>
+
+        </form>
+
+    </div>
 </div>
-</div>
 
+<!-- MODAL EDIT -->
 <div class="modal" id="editModal">
-<div class="modal-content">
+    <div class="modal-content">
 
-<h3>Edit Kamar</h3>
+        <h3>
+            <i class="fa fa-edit"></i>
+            Edit Kamar
+        </h3>
 
-<form method="post" action="<?= base_url('admin/kamar_update') ?>" enctype="multipart/form-data">
+        <form method="post" action="<?= base_url('admin/kamar_update') ?>" enctype="multipart/form-data">
 
-    <input type="hidden" name="id_room" id="edit_id">
+            <input type="hidden" name="id_room" id="edit_id">
 
-    <input type="text" name="room_number" id="edit_room">
-    <input type="number" name="price" id="edit_price">
+            <label>Nomor Kamar</label>
+            <input
+                type="text"
+                name="room_number"
+                id="edit_room"
+                required>
 
-    <label>Upload Gambar Baru</label>
-    <input type="file" name="images[]" multiple onchange="previewImages(event)">
+            <label>Harga</label>
+            <input
+                type="number"
+                name="price"
+                id="edit_price"
+                required>
 
-    <div id="previewEdit"></div>
+            <label>Upload Gambar Baru</label>
+            <input
+                type="file"
+                name="images[]"
+                multiple
+                onchange="previewImages(event)">
 
-    <button class="btn">Update</button>
-</form>
+            <div id="previewEdit" class="preview-wrap"></div>
 
-<button onclick="closeModal('editModal')">Tutup</button>
+            <button type="submit" class="btn-save">
+                Update
+            </button>
 
+            <button type="button" class="btn-close" onclick="closeModal('editModal')">
+                Tutup
+            </button>
+
+        </form>
+
+    </div>
 </div>
-</div>
 
-<!-- STYLE -->
 <style>
-table th, table td { padding:10px; }
-
-.room-grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(250px,1fr));
+/* HEADER */
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:1.5em 0 25px;
     gap:20px;
 }
 
-.room-card {
-    background:white;
-    padding:15px;
+.page-header h2{
+    font-size:28px;
+    margin:0 0 5px;
+    color:#222;
+}
+
+.page-header p{
+    margin:0;
+    color:#777;
+}
+
+/* GRID */
+.room-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:25px;
+}
+
+/* CARD */
+.room-card{
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 5px 18px rgba(0,0,0,0.08);
+    transition:0.3s ease;
+    position:relative;
+}
+
+.room-card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* IMAGE */
+.room-image{
+    position:relative;
+    height:220px;
+    overflow:hidden;
+}
+
+.room-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transition:0.4s;
+}
+
+.room-card:hover .room-image img{
+    transform:scale(1.08);
+}
+
+/* OVERLAY */
+.room-overlay{
+    position:absolute;
+    top:15px;
+    right:15px;
+    background:rgba(0,0,0,0.6);
+    color:#fff;
+    padding:6px 12px;
+    border-radius:30px;
+    font-size:13px;
+}
+
+/* CONTENT */
+.room-content{
+    padding:20px;
+}
+
+.room-content h3{
+    margin:0;
+    font-size:22px;
+    color:#222;
+}
+
+/* PRICE */
+.price{
+    margin-top:10px;
+    font-size:24px;
+    font-weight:bold;
+    color:#28a745;
+}
+
+.price small{
+    font-size:14px;
+    color:#888;
+    font-weight:normal;
+}
+
+/* INFO */
+.room-info{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    margin:18px 0;
+    color:#666;
+    font-size:14px;
+}
+
+.room-info span{
+    background:#f5f5f5;
+    padding:6px 12px;
+    border-radius:20px;
+}
+
+/* ACTION */
+.actions{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+}
+
+.btn-add,
+.btn-detail,
+.btn-edit,
+.btn-delete,
+.btn-save,
+.btn-close{
+    border:none;
     border-radius:12px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    padding:12px 14px;
+    cursor:pointer;
+    text-decoration:none;
+    font-weight:bold;
+    text-align:center;
     transition:0.3s;
 }
 
-.room-card:hover {
-    transform:translateY(-5px);
+.btn-add,
+.btn-detail,
+.btn-edit,
+.btn-save{
+    color:#fff;
 }
 
-.room-img {
-    width:100%;
-    height:150px;
-    object-fit:cover;
-    border-radius:10px;
-}
-
-.price {
-    color:#28a745;
-    font-weight:bold;
-}
-
-.actions {
-    display:flex;
-    gap:5px;
-    margin-top:10px;
-}
-
-.actions button, .actions a {
-    padding:6px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
+.btn-add{
     background:#007bff;
-    color:white;
-    text-decoration:none;
+    white-space:nowrap;
 }
 
-#preview img, #previewEdit img {
-    width:70px;
-    margin:5px;
-    border-radius:6px;
+.btn-detail{
+    background:linear-gradient(135deg,#17a2b8,#138496);
 }
 
-.btn {
-    background:#007bff; color:white;
-    padding:8px 12px; border:none; border-radius:6px;
+.btn-edit{
+    background:linear-gradient(135deg,#ffc107,#d39e00);
 }
 
-.btn-edit { background:#ffc107; padding:6px; }
-.btn-delete { background:#dc3545; padding:6px; color:white; }
+.btn-delete{
+    background:#f8d7da;
+    color:#721c24;
+}
 
-.modal {
+.btn-save{
+    width:100%;
+    margin-top:10px;
+    background:#007bff;
+}
+
+.btn-close{
+    width:100%;
+    margin-top:12px;
+    background:#eee;
+    color:#333;
+}
+
+.btn-add:hover,
+.btn-detail:hover,
+.btn-edit:hover,
+.btn-delete:hover,
+.btn-save:hover,
+.btn-close:hover{
+    transform:translateY(-2px);
+}
+
+/* MODAL */
+.modal{
     display:none;
     position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.5);
-}
-
-.modal-content {
-    background:white;
-    padding:20px;
-    width:300px;
-    margin:100px auto;
-    border-radius:10px;
-}
-
-input {
+    z-index:999;
+    top:0;
+    left:0;
     width:100%;
-    padding:10px;
-    margin:10px 0;
+    height:100%;
+    background:rgba(0,0,0,0.55);
+}
+
+.modal-content{
+    background:#fff;
+    width:430px;
+    max-width:92%;
+    margin:70px auto;
+    padding:25px;
+    border-radius:18px;
+    animation:fadeIn .3s ease;
+}
+
+.modal-content h3{
+    margin-top:0;
+    margin-bottom:20px;
+}
+
+.modal-content label{
+    display:block;
+    color:#555;
+    font-weight:bold;
+    margin-bottom:8px;
+}
+
+.modal-content input{
+    width:100%;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    margin-bottom:18px;
+}
+
+.modal-content input:focus{
+    outline:none;
+    border-color:#007bff;
+    box-shadow:0 0 0 4px rgba(0,123,255,0.08);
+}
+
+/* PREVIEW */
+.preview-wrap{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+}
+
+.preview-wrap img{
+    width:72px;
+    height:58px;
+    object-fit:cover;
+    border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(-20px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+
+    .page-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .btn-add{
+        width:100%;
+    }
+
+    .room-image{
+        height:200px;
+    }
+
+    .page-header h2{
+        font-size:24px;
+    }
+
+    .actions{
+        grid-template-columns:1fr;
+    }
+
 }
 </style>
 
-<!-- SCRIPT -->
 <script>
-function openAddModal() {
+function openAddModal(){
     document.getElementById('addModal').style.display = 'block';
 }
 
-function openEditModal(id, room, price) {
+function openEditModal(id, room, price){
     document.getElementById('edit_id').value = id;
     document.getElementById('edit_room').value = room;
     document.getElementById('edit_price').value = price;
-
     document.getElementById('editModal').style.display = 'block';
 }
 
-function openDetailModal(room, price, img) {
-    document.getElementById('detail_room').innerText = room;
-    document.getElementById('detail_price').innerText = new Intl.NumberFormat().format(price);
-    document.getElementById('detail_img').src = img;
-
-    document.getElementById('detailModal').style.display = 'block';
-}
-
-function closeModal(id) {
+function closeModal(id){
     document.getElementById(id).style.display = 'none';
 }
 
-// PREVIEW MULTI IMAGE
-function previewImages(event) {
-    let preview = event.target.closest('.modal-content').querySelector('div[id^="preview"]');
-    preview.innerHTML = "";
+function previewImages(event){
+    const preview = event.target
+        .closest('.modal-content')
+        .querySelector('.preview-wrap');
 
-    for (let file of event.target.files) {
-        let reader = new FileReader();
+    preview.innerHTML = '';
 
-        reader.onload = function(e) {
-            let img = document.createElement('img');
+    for(const file of event.target.files){
+        const reader = new FileReader();
+
+        reader.onload = function(e){
+            const img = document.createElement('img');
             img.src = e.target.result;
             preview.appendChild(img);
         }
 
         reader.readAsDataURL(file);
+    }
+}
+
+window.onclick = function(e){
+    const addModal = document.getElementById('addModal');
+    const editModal = document.getElementById('editModal');
+
+    if(e.target == addModal){
+        closeModal('addModal');
+    }
+
+    if(e.target == editModal){
+        closeModal('editModal');
     }
 }
 </script>
