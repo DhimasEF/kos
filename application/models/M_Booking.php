@@ -5,9 +5,9 @@ class M_Booking extends CI_Model {
         return $this->db->get('bookings')->result();
     }
 
-    public function getAllWithDetail()
+    public function getAllWithDetail($keyword = null, $status = null)
     {
-        return $this->db
+        $this->db
             ->select('
                 bookings.*,
                 users.name,
@@ -36,7 +36,21 @@ class M_Booking extends CI_Model {
             ')
             ->from('bookings')
             ->join('users', 'users.id_user = bookings.id_user')
-            ->join('rooms', 'rooms.id_room = bookings.id_room')
+            ->join('rooms', 'rooms.id_room = bookings.id_room');
+
+        if (!empty($keyword)) {
+            $this->db->group_start();
+            $this->db->like('users.name', $keyword);
+            $this->db->or_like('rooms.room_number', $keyword);
+            $this->db->or_like('bookings.id_booking', $keyword);
+            $this->db->group_end();
+        }
+
+        if (!empty($status)) {
+            $this->db->where('bookings.status', $status);
+        }
+
+        return $this->db
             ->order_by('bookings.created_at', 'DESC')
             ->get()
             ->result();

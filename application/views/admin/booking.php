@@ -14,6 +14,49 @@
         </p>
     </div>
 
+    <form method="get" action="<?= base_url('admin/booking') ?>" class="filter-card">
+
+        <div class="filter-group">
+            <label>Cari Booking</label>
+            <input
+                type="text"
+                name="keyword"
+                value="<?= htmlspecialchars($keyword ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                placeholder="Cari user, nomor kamar, atau ID booking...">
+        </div>
+
+        <div class="filter-group">
+            <label>Status</label>
+            <select name="status">
+                <option value="">Semua Status</option>
+                <option value="pending" <?= ($filter_status ?? '') == 'pending' ? 'selected' : '' ?>>
+                    Pending
+                </option>
+                <option value="approved" <?= ($filter_status ?? '') == 'approved' ? 'selected' : '' ?>>
+                    Approved
+                </option>
+                <option value="completed" <?= ($filter_status ?? '') == 'completed' ? 'selected' : '' ?>>
+                    Completed
+                </option>
+                <option value="rejected" <?= ($filter_status ?? '') == 'rejected' ? 'selected' : '' ?>>
+                    Rejected
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-action">
+            <button type="submit" class="btn-filter">
+                <i class="fa fa-search"></i>
+                Cari
+            </button>
+
+            <a href="<?= base_url('admin/booking') ?>" class="btn-reset">
+                Reset
+            </a>
+        </div>
+
+    </form>
+
     <!-- LIST -->
     <div class="booking-list">
 
@@ -282,6 +325,90 @@
     margin:0;
     font-weight:600;
     color:#222;
+}
+
+/* FILTER */
+.filter-card{
+    background:#fff;
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:22px;
+    display:grid;
+    grid-template-columns:1fr 220px auto;
+    gap:15px;
+    align-items:end;
+    box-shadow:0 5px 18px rgba(0,0,0,0.08);
+}
+
+.filter-group label{
+    display:block;
+    font-size:13px;
+    color:#777;
+    margin-bottom:8px;
+    font-weight:bold;
+}
+
+.filter-group input,
+.filter-group select{
+    width:100%;
+    padding:13px 14px;
+    border:1px solid #ddd;
+    border-radius:12px;
+    outline:none;
+}
+
+.filter-group input:focus,
+.filter-group select:focus{
+    border-color:#007bff;
+    box-shadow:0 0 0 4px rgba(0,123,255,0.08);
+}
+
+.filter-action{
+    display:flex;
+    gap:10px;
+}
+
+.btn-filter,
+.btn-reset{
+    border:none;
+    border-radius:12px;
+    padding:13px 18px;
+    cursor:pointer;
+    text-decoration:none;
+    font-weight:bold;
+    transition:.3s;
+    white-space:nowrap;
+}
+
+.btn-filter{
+    background:#007bff;
+    color:#fff;
+}
+
+.btn-reset{
+    background:#eee;
+    color:#333;
+}
+
+.btn-filter:hover,
+.btn-reset:hover{
+    transform:translateY(-2px);
+}
+
+@media(max-width:900px){
+    .filter-card{
+        grid-template-columns:1fr;
+    }
+
+    .filter-action{
+        flex-direction:column;
+    }
+
+    .btn-filter,
+    .btn-reset{
+        width:100%;
+        text-align:center;
+    }
 }
 
 /* STATUS */

@@ -70,6 +70,7 @@ class M_Message extends CI_Model
                 cr.id_admin,
                 cr.created_at,
                 u.name,
+                u.profil_picture,
 
                 (
                     SELECT cm.message

@@ -194,11 +194,19 @@ class Admin extends CI_Controller {
         redirect('admin/kamar');
     }
 
-    public function booking() {
+    public function booking()
+    {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $this->session->userdata('id_user')
         ])->row();
-        $data['booking'] = $this->M_Booking->getAllWithDetail();
+
+        $keyword = trim($this->input->get('keyword'));
+        $status  = trim($this->input->get('status'));
+
+        $data['keyword'] = $keyword;
+        $data['filter_status'] = $status;
+        $data['booking'] = $this->M_Booking->getAllWithDetail($keyword, $status);
+
         $this->load->view('admin/booking', $data);
     }
 
@@ -219,6 +227,9 @@ class Admin extends CI_Controller {
     }
 
     public function message() {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $id_admin = $this->session->userdata('id_user');
         $data['rooms'] = $this->M_Message->getRoomsAdmin($id_admin);
         $this->load->view('admin/message', $data);
@@ -226,6 +237,9 @@ class Admin extends CI_Controller {
 
     public function chat($id_user)
     {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $id_admin = $this->session->userdata('id_user');
 
         $room = $this->M_Message->getRoom($id_user, $id_admin);
@@ -241,7 +255,7 @@ class Admin extends CI_Controller {
         $data['id_user']  = $id_user;
 
         // 🔥 TAMBAHAN INI
-        $data['user'] = $this->M_User->getById($id_user);
+        $data['users'] = $this->M_User->getById($id_user);
 
         $this->M_Message->markAsRead($id_chat, $id_admin);
 
@@ -304,12 +318,26 @@ class Admin extends CI_Controller {
         echo json_encode($messages);
     }
 
-    public function payment() {
-        $data['payment'] = $this->M_Payment->getAllWithDetail();
+    public function payment()
+    {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
+
+        $keyword = trim($this->input->get('keyword'));
+        $status  = trim($this->input->get('status'));
+
+        $data['keyword'] = $keyword;
+        $data['filter_status'] = $status;
+        $data['payment'] = $this->M_Payment->getAllWithDetail($keyword, $status);
+
         $this->load->view('admin/payment', $data);
     }
 
     public function payment_detail($id) {
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
         $data['payment'] = $this->M_Payment->getById($id);
 
         if (!$data['payment']) {
@@ -319,7 +347,6 @@ class Admin extends CI_Controller {
         $this->load->view('admin/payment_detail', $data);
     }
 
-    // ✅ APPROVE
     // ✅ APPROVE
     public function payment_approve($id)
     {
@@ -357,7 +384,10 @@ class Admin extends CI_Controller {
     }
 
     public function user() {
-        $data['user'] = $this->M_User->getAll();
+        $data['user'] = $this->db->get_where('users', [
+            'id_user' => $this->session->userdata('id_user')
+        ])->row();
+        $data['users'] = $this->M_User->getAll();
         $this->load->view('admin/user', $data);
     }
 }
