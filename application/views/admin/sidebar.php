@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Panel</title>
-
+    <!-- 🟢 Menggunakan variabel $title secara dinamis pada tab browser -->
+    <title><?= isset($title) ? $title : 'Admin Panel' ?></title>
+    <link rel="icon" type="image/png" href="<?= base_url('assets/resources/icon.png') ?>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -84,6 +85,14 @@
             background: rgba(255,255,255,0.2);
         }
 
+        /* 🟢 CSS UNTUK MENU AKTIF / HIGHLIGHT */
+        .menu a.active {
+            background: rgba(255, 255, 255, 0.25);
+            font-weight: bold;
+            box-shadow: inset 4px 0 0 white;
+            padding-left: 12px;
+        }
+
         /* LOGOUT */
         .logout {
             margin: auto 0 15px 0;
@@ -143,6 +152,9 @@
     $admin_role = !empty($user->role)
         ? ucfirst($user->role)
         : 'Admin';
+
+    // 🟢 Memecah title untuk mengetahui menu yang aktif saat ini (misal "Kamar | List Kamar" -> diambil "Kamar")
+    $current_menu = isset($title) ? explode(' | ', $title)[0] : '';
 ?>
 
 <div class="sidebar">
@@ -166,32 +178,33 @@
 
     <!-- MENU -->
     <div class="menu">
-        <a href="<?= base_url('admin/dashboard') ?>">
+        <!-- 🟢 Deteksi Class Active menggunakan variabel $current_menu -->
+        <a href="<?= base_url('admin/dashboard') ?>" class="<?= $current_menu == 'Dashboard' ? 'active' : '' ?>">
             <i class="fa fa-home"></i>
             Dashboard
         </a>
 
-        <a href="<?= base_url('admin/kamar') ?>">
+        <a href="<?= base_url('admin/kamar') ?>" class="<?= $current_menu == 'Kamar' ? 'active' : '' ?>">
             <i class="fa fa-bed"></i>
             Kamar
         </a>
 
-        <a href="<?= base_url('admin/booking') ?>">
+        <a href="<?= base_url('admin/booking') ?>" class="<?= $current_menu == 'Booking' ? 'active' : '' ?>">
             <i class="fa fa-calendar"></i>
             Booking
         </a>
 
-        <a href="<?= base_url('admin/payment') ?>">
+        <a href="<?= base_url('admin/payment') ?>" class="<?= $current_menu == 'Payment' ? 'active' : '' ?>">
             <i class="fa fa-credit-card"></i>
             Payment
         </a>
 
-        <a href="<?= base_url('admin/message') ?>">
+        <a href="<?= base_url('admin/message') ?>" class="<?= $current_menu == 'Message' ? 'active' : '' ?>">
             <i class="fa fa-envelope"></i>
             Message
         </a>
 
-        <a href="<?= base_url('admin/user') ?>">
+        <a href="<?= base_url('admin/user') ?>" class="<?= $current_menu == 'User' ? 'active' : '' ?>">
             <i class="fa fa-users"></i>
             User
         </a>

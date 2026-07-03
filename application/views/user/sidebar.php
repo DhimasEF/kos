@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>User Panel</title>
-
+    <!-- 🟢 Menggunakan variabel $title secara dinamis pada tab browser -->
+    <title><?= isset($title) ? $title : 'User Panel' ?></title>
+    <link rel="icon" type="image/png" href="<?= base_url('assets/resources/icon.png') ?>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -15,7 +16,7 @@
 
         .content {
             margin-left: 260px;
-            padding: 0 30px 30px 30px;
+            padding: 0 30px 0 0;
             width: 100%;
         }
 
@@ -29,6 +30,7 @@
             position: fixed;
             display: flex;
             flex-direction: column;
+            box-sizing: border-box; /* Diselaraskan */
         }
 
         /* PROFILE */
@@ -43,6 +45,7 @@
             border-radius: 50%;
             border: 3px solid white;
             object-fit: cover;
+            background: rgba(255,255,255,0.2);
         }
 
         .profile h3 {
@@ -70,8 +73,21 @@
             transition: 0.3s;
         }
 
+        /* Merapikan lebar icon agar sejajar */
+        .menu a i {
+            width: 22px; 
+        }
+
         .menu a:hover {
             background: rgba(255,255,255,0.2);
+        }
+
+        /* 🟢 CSS UNTUK MENU AKTIF / HIGHLIGHT */
+        .menu a.active {
+            background: rgba(255, 255, 255, 0.25);
+            font-weight: bold;
+            box-shadow: inset 4px 0 0 white;
+            padding-left: 12px;
         }
 
         /* LOGOUT */
@@ -81,10 +97,45 @@
             color: #ffecec;
             padding: 12px;
             border-radius: 8px;
+            transition: 0.3s; /* Diselaraskan */
         }
 
         .logout:hover {
             background: rgba(255,0,0,0.2);
+        }
+
+        /* GLOBAL USER UI (Diselaraskan) */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            flex: 1;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            padding: 25px;
+            border-radius: 14px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
         }
     </style>
 </head>
@@ -100,35 +151,67 @@
     } else {
         $foto = $default_foto;
     }
+
+    $user_name = !empty($user->name)
+        ? $user->name
+        : 'User';
+
+    $user_role = !empty($user->role)
+        ? ucfirst($user->role)
+        : 'User';
+
+    // 🟢 Memecah title untuk mengetahui menu yang aktif saat ini (misal "Kamar | List Kamar" -> diambil "Kamar")
+    $current_menu = isset($title) ? explode(' | ', $title)[0] : '';
 ?>
 
 <div class="sidebar">
 
     <!-- PROFILE -->
     <div class="profile">
-        <img src="<?= $foto ?>">
+        <img src="<?= $foto ?>" alt="Profile Picture">
 
         <h3>
-            <?= !empty($user->name) ? $user->name : 'User' ?>
+            <?= $user_name ?>
         </h3>
 
         <p>
-            <?= !empty($user->role) ? ucfirst($user->role) : 'User' ?>
+            <?= $user_role ?>
         </p>
     </div>
 
     <!-- MENU -->
     <div class="menu">
-        <a href="<?= base_url('user/dashboard') ?>"><i class="fa fa-home"></i> Dashboard</a>
-        <a href="<?= base_url('user/kamar') ?>"><i class="fa fa-bed"></i> Kamar</a>
-        <a href="<?= base_url('user/booking') ?>"><i class="fa fa-calendar"></i> Booking</a>
-        <a href="<?= base_url('user/payment') ?>"><i class="fa fa-credit-card"></i> Payment</a>
-        <a href="<?= base_url('user/message') ?>"><i class="fa fa-envelope"></i> Message</a>
+        <!-- 🟢 Deteksi Class Active menggunakan variabel $current_menu -->
+        <a href="<?= base_url('user/dashboard') ?>" class="<?= $current_menu == 'Dashboard' ? 'active' : '' ?>">
+            <i class="fa fa-home"></i> 
+            Dashboard
+        </a>
+        
+        <a href="<?= base_url('user/kamar') ?>" class="<?= $current_menu == 'Kamar' ? 'active' : '' ?>">
+            <i class="fa fa-bed"></i> 
+            Kamar
+        </a>
+        
+        <a href="<?= base_url('user/booking') ?>" class="<?= $current_menu == 'Booking' ? 'active' : '' ?>">
+            <i class="fa fa-calendar"></i> 
+            Booking
+        </a>
+        
+        <a href="<?= base_url('user/payment') ?>" class="<?= $current_menu == 'Payment' ? 'active' : '' ?>">
+            <i class="fa fa-credit-card"></i> 
+            Payment
+        </a>
+        
+        <a href="<?= base_url('user/message') ?>" class="<?= $current_menu == 'Message' ? 'active' : '' ?>">
+            <i class="fa fa-envelope"></i> 
+            Message
+        </a>
     </div>
 
     <!-- LOGOUT -->
     <a href="<?= base_url('auth/logout') ?>" class="logout">
-        <i class="fa fa-sign-out-alt"></i> Logout
+        <i class="fa fa-sign-out-alt"></i> 
+        Logout
     </a>
 
 </div>

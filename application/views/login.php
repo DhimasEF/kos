@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Auth</title>
-
+    <link rel="icon" type="image/png" href="<?= base_url('assets/resources/icon.png') ?>">
     <style>
         *{
             box-sizing:border-box;

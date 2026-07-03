@@ -26,6 +26,9 @@ class User extends CI_Controller {
             'id_user' => $id_user
         ])->row();
 
+        // 🟢 Menambahkan Title Dashboard
+        $data['title'] = 'Dashboard | ' . (!empty($data['user']->name) ? $data['user']->name : 'User');
+
         // Total semua booking milik user
         $data['total_booking'] = $this->db
             ->where('id_user', $id_user)
@@ -77,6 +80,9 @@ class User extends CI_Controller {
             'id_user' => $this->session->userdata('id_user')
         ])->row();
 
+        // 🟢 Menambahkan Title Kamar
+        $data['title'] = 'Kamar | List Kamar';
+
         $data['kamar'] = $this->M_Kamar->getAll();
         $this->load->view('user/sidebar', $data);
         $this->load->view('user/kamar', $data);
@@ -90,6 +96,9 @@ class User extends CI_Controller {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $id_user
         ])->row();
+
+        // 🟢 Menambahkan Title Kamar Detail
+        $data['title'] = 'Kamar | Detail Kamar';
 
         $data['kamar'] = $this->M_Kamar->getById($id_room);
 
@@ -154,6 +163,9 @@ class User extends CI_Controller {
         ])->row();
         $id_user = $this->session->userdata('id_user');
 
+        // 🟢 Menambahkan Title Booking List
+        $data['title'] = 'Booking | List Booking';
+
         $data['kamar'] = $this->M_Booking->getByUser($id_user);
         $this->load->view('user/booking', $data);
     }
@@ -199,6 +211,9 @@ class User extends CI_Controller {
             'id_user' => $this->session->userdata('id_user')
         ])->row();
         
+        // 🟢 Menambahkan Title Booking Detail
+        $data['title'] = 'Booking | Detail Booking';
+
         $data['booking'] = $this->M_Booking->getDetail($id_booking, $id_user);
         $data['payment'] = $this->M_Booking->getDetailPayment($id_booking, $id_user);
 
@@ -256,6 +271,9 @@ class User extends CI_Controller {
             'id_user' => $this->session->userdata('id_user')
         ])->row();
         $id_user = $this->session->userdata('id_user');
+
+        // 🟢 Menambahkan Title Payment List
+        $data['title'] = 'Payment | List Payment';
 
         $data['payment'] = $this->M_Booking->getPaymentByUser($id_user);
 
@@ -316,6 +334,9 @@ class User extends CI_Controller {
             'id_user' => $this->session->userdata('id_user')
         ])->row();
         $id_user = $this->session->userdata('id_user');
+
+        // 🟢 Menambahkan Title Payment Detail
+        $data['title'] = 'Payment | Detail Payment';
 
         $data['payment'] = $this->M_Booking->getDetailPayment($id_booking, $id_user);
 
@@ -383,6 +404,9 @@ class User extends CI_Controller {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $id_user
         ])->row();
+
+        // 🟢 Menambahkan Title Chat Room / Message
+        $data['title'] = 'Message | Room Chat';
 
         $room = $this->M_Message->getRoom($id_user, $id_admin);
 

@@ -1,3 +1,35 @@
+<--------model---------->
+<?php
+class M_Payment extends CI_Model {
+
+    public function getAll() {
+        return $this->db->get('payments')->result();
+    }
+
+    public function getAllWithDetail() {
+        return $this->db
+            ->select('payments.*, rooms.room_number, bookings.id_booking')
+            ->from('payments')
+            ->join('bookings', 'bookings.id_booking = payments.id_booking')
+            ->join('rooms', 'rooms.id_room = bookings.id_room')
+            ->order_by('payments.id_payment', 'DESC')
+            ->get()
+            ->result();
+    }
+
+    public function getById($id) {
+        return $this->db
+            ->select('payments.*, rooms.room_number, bookings.id_booking')
+            ->from('payments')
+            ->join('bookings', 'bookings.id_booking = payments.id_booking')
+            ->join('rooms', 'rooms.id_room = bookings.id_room')
+            ->where('payments.id_payment', $id)
+            ->get()
+            ->row();
+    }
+}
+
+<-----------controller----------->
 <?php
 class Admin extends CI_Controller {
 
@@ -24,9 +56,6 @@ class Admin extends CI_Controller {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $id_user
         ])->row();
-
-        // 🟢 Menambahkan Title Dashboard
-        $data['title'] = 'Dashboard | ' . (!empty($data['user']->name) ? $data['user']->name : 'Admin');
 
         $data['total_kamar']   = $this->db->count_all('rooms');
         $data['total_booking'] = $this->db->count_all('bookings');
@@ -67,10 +96,6 @@ class Admin extends CI_Controller {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $this->session->userdata('id_user')
         ])->row();
-        
-        // 🟢 Menambahkan Title Kamar
-        $data['title'] = 'Kamar | List Kamar';
-        
         $data['kamar'] = $this->M_Kamar->getAll();
         $this->load->view('admin/kamar', $data);
     }
@@ -127,9 +152,6 @@ class Admin extends CI_Controller {
         if (!$data['kamar']) {
             show_404();
         }
-
-        // 🟢 Menambahkan Title Kamar Detail
-        $data['title'] = 'Kamar | Detail Kamar';
 
         $this->load->view('admin/kamar_detail', $data);
     }
@@ -204,22 +226,11 @@ class Admin extends CI_Controller {
         redirect('admin/kamar');
     }
 
-    public function booking()
-    {
+    public function booking() {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $this->session->userdata('id_user')
         ])->row();
-
-        $keyword = trim($this->input->get('keyword'));
-        $status  = trim($this->input->get('status'));
-
-        // 🟢 Menambahkan Title Booking
-        $data['title'] = 'Booking | List Booking';
-
-        $data['keyword'] = $keyword;
-        $data['filter_status'] = $status;
-        $data['booking'] = $this->M_Booking->getAllWithDetail($keyword, $status);
-
+        $data['booking'] = $this->M_Booking->getAllWithDetail();
         $this->load->view('admin/booking', $data);
     }
 
@@ -244,10 +255,6 @@ class Admin extends CI_Controller {
             'id_user' => $this->session->userdata('id_user')
         ])->row();
         $id_admin = $this->session->userdata('id_user');
-
-        // 🟢 Menambahkan Title Message List
-        $data['title'] = 'Message | List Message';
-
         $data['rooms'] = $this->M_Message->getRoomsAdmin($id_admin);
         $this->load->view('admin/message', $data);
     }
@@ -266,9 +273,6 @@ class Admin extends CI_Controller {
         }
 
         $id_chat = $room->id_chat;
-
-        // 🟢 Menambahkan Title Chat Detail
-        $data['title']    = 'Message | Room Chat';
 
         $data['messages'] = $this->M_Message->getMessages($id_chat);
         $data['id_chat']  = $id_chat;
@@ -338,22 +342,11 @@ class Admin extends CI_Controller {
         echo json_encode($messages);
     }
 
-    public function payment()
-    {
+    public function payment() {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $this->session->userdata('id_user')
         ])->row();
-
-        $keyword = trim($this->input->get('keyword'));
-        $status  = trim($this->input->get('status'));
-
-        // 🟢 Menambahkan Title Payment List
-        $data['title'] = 'Payment | List Payment';
-
-        $data['keyword'] = $keyword;
-        $data['filter_status'] = $status;
-        $data['payment'] = $this->M_Payment->getAllWithDetail($keyword, $status);
-
+        $data['payment'] = $this->M_Payment->getAllWithDetail();
         $this->load->view('admin/payment', $data);
     }
 
@@ -366,9 +359,6 @@ class Admin extends CI_Controller {
         if (!$data['payment']) {
             show_404();
         }
-
-        // 🟢 Menambahkan Title Payment Detail
-        $data['title'] = 'Payment | Detail Payment';
 
         $this->load->view('admin/payment_detail', $data);
     }
@@ -413,11 +403,368 @@ class Admin extends CI_Controller {
         $data['user'] = $this->db->get_where('users', [
             'id_user' => $this->session->userdata('id_user')
         ])->row();
-
-        // 🟢 Menambahkan Title User
-        $data['title'] = 'User | List User';
-
         $data['users'] = $this->M_User->getAll();
         $this->load->view('admin/user', $data);
     }
 }
+
+
+<--------------View------------------>
+<?php $this->load->view('admin/sidebar'); ?>
+
+<div class="content">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h2>
+            <i class="fa fa-credit-card"></i>
+            Manajemen Payment
+        </h2>
+
+        <p>
+            Kelola dan verifikasi pembayaran booking kamar pengguna.
+        </p>
+    </div>
+
+    <!-- LIST -->
+    <div class="booking-list">
+
+        <?php if (!empty($payment)): ?>
+
+            <?php foreach ($payment as $p): ?>
+
+                <div class="booking-item">
+
+                    <!-- BODY -->
+                    <div class="booking-body">
+
+                        <!-- TOP -->
+                        <div class="booking-top">
+
+                            <div>
+                                <h3>
+                                    Kamar <?= $p->room_number ?>
+                                </h3>
+
+                                <?php if (!empty($p->id_booking)): ?>
+                                    <span class="booking-id">
+                                        Booking #<?= $p->id_booking ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="booking-id">
+                                        Payment #<?= $p->id_payment ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- STATUS -->
+                            <?php if ($p->payment_status == 'paid'): ?>
+
+                                <div class="status pending">
+                                    <i class="fa fa-clock"></i>
+                                    Menunggu Verifikasi
+                                </div>
+
+                            <?php elseif ($p->payment_status == 'verified'): ?>
+
+                                <div class="status approved">
+                                    <i class="fa fa-check-circle"></i>
+                                    Terverifikasi
+                                </div>
+
+                            <?php else: ?>
+
+                                <div class="status rejected">
+                                    <i class="fa fa-times-circle"></i>
+                                    Ditolak
+                                </div>
+
+                            <?php endif; ?>
+
+                        </div>
+
+                        <!-- INFO -->
+                        <div class="booking-info">
+
+                            <div class="info-box">
+                                <label>
+                                    <i class="fa fa-calendar"></i>
+                                    Tanggal Pembayaran
+                                </label>
+
+                                <p>
+                                    <?= !empty($p->payment_date) ? $p->payment_date : '-' ?>
+                                </p>
+                            </div>
+
+                            <div class="info-box">
+                                <label>
+                                    <i class="fa fa-credit-card"></i>
+                                    Metode Pembayaran
+                                </label>
+
+                                <p>
+                                    <?= !empty($p->payment_method) ? $p->payment_method : '-' ?>
+                                </p>
+                            </div>
+
+                            <?php if (!empty($p->amount)): ?>
+
+                                <div class="info-box">
+                                    <label>
+                                        <i class="fa fa-money-bill"></i>
+                                        Total Bayar
+                                    </label>
+
+                                    <p class="price">
+                                        Rp <?= number_format($p->amount, 0, ',', '.') ?>
+                                    </p>
+                                </div>
+
+                            <?php endif; ?>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ACTION -->
+                    <div class="booking-action">
+
+                        <a
+                            href="<?= base_url('admin/payment_detail/'.$p->id_payment) ?>"
+                            class="btn-detail">
+
+                            <i class="fa fa-eye"></i>
+                            Detail
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            <?php endforeach; ?>
+
+        <?php else: ?>
+
+            <div class="empty-payment">
+
+                <i class="fa fa-credit-card"></i>
+
+                <h3>Belum Ada Pembayaran</h3>
+
+                <p>
+                    Data pembayaran pengguna akan tampil di sini.
+                </p>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>
+
+<style>
+/* HEADER */
+.page-header{
+    margin:1.5em 0 25px;
+}
+
+.page-header h2{
+    font-size:28px;
+    margin:0 0 5px;
+    color:#222;
+}
+
+.page-header p{
+    margin:0;
+    color:#777;
+}
+
+/* LIST */
+.booking-list{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+/* CARD */
+.booking-item{
+    background:#fff;
+    border-radius:18px;
+    padding:18px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    box-shadow:0 5px 18px rgba(0,0,0,.08);
+    transition:.3s;
+}
+
+.booking-item:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 25px rgba(0,0,0,.12);
+}
+
+/* BODY */
+.booking-body{
+    flex:1;
+}
+
+/* TOP */
+.booking-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:15px;
+    margin-bottom:18px;
+}
+
+.booking-top h3{
+    margin:0;
+    font-size:24px;
+    color:#222;
+}
+
+.booking-id{
+    color:#888;
+    font-size:14px;
+}
+
+/* INFO */
+.booking-info{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.info-box{
+    background:#f8f9fa;
+    padding:12px 16px;
+    border-radius:12px;
+    min-width:180px;
+}
+
+.info-box label{
+    display:block;
+    font-size:12px;
+    color:#888;
+    margin-bottom:6px;
+}
+
+.info-box label i{
+    margin-right:5px;
+}
+
+.info-box p{
+    margin:0;
+    font-size:15px;
+    font-weight:600;
+    color:#222;
+}
+
+.price{
+    color:#28a745 !important;
+}
+
+/* STATUS */
+.status{
+    padding:8px 16px;
+    border-radius:30px;
+    font-size:13px;
+    font-weight:bold;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    white-space:nowrap;
+}
+
+.pending{
+    background:#fff3cd;
+    color:#856404;
+}
+
+.approved{
+    background:#d4edda;
+    color:#155724;
+}
+
+.rejected{
+    background:#f8d7da;
+    color:#721c24;
+}
+
+/* ACTION */
+.booking-action{
+    flex-shrink:0;
+}
+
+/* BUTTON */
+.btn-detail{
+    display:inline-block;
+    background:linear-gradient(135deg,#17a2b8,#138496);
+    color:#fff;
+    padding:12px 22px;
+    border-radius:12px;
+    text-decoration:none;
+    font-weight:bold;
+    transition:.3s;
+}
+
+.btn-detail:hover{
+    transform:translateY(-2px);
+    background:linear-gradient(135deg,#138496,#11707f);
+}
+
+/* EMPTY */
+.empty-payment{
+    background:#fff;
+    padding:60px 30px;
+    border-radius:18px;
+    text-align:center;
+    box-shadow:0 5px 18px rgba(0,0,0,.08);
+}
+
+.empty-payment i{
+    font-size:60px;
+    color:#ccc;
+    margin-bottom:15px;
+}
+
+.empty-payment h3{
+    margin-bottom:10px;
+    color:#444;
+}
+
+.empty-payment p{
+    color:#777;
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+
+    .booking-item{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .booking-top{
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .booking-action{
+        width:100%;
+    }
+
+    .btn-detail{
+        width:100%;
+        text-align:center;
+    }
+
+    .info-box{
+        width:100%;
+    }
+
+}
+</style>
