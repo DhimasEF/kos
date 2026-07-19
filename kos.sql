@@ -2,7 +2,7 @@
 -- Host:                         127.0.0.1
 -- Server version:               10.2.44-MariaDB - mariadb.org binary distribution
 -- Server OS:                    Win64
--- HeidiSQL Version:             12.16.0.7229
+-- HeidiSQL Version:             12.17.0.7270
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -35,13 +35,14 @@ CREATE TABLE IF NOT EXISTS `bookings` (
   KEY `id_room` (`id_room`),
   CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`),
   CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`id_room`) REFERENCES `rooms` (`id_room`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 -- Dumping data for table kos.bookings: ~3 rows (approximately)
 INSERT INTO `bookings` (`id_booking`, `id_user`, `id_room`, `start_at`, `status`, `created_at`, `end_at`, `type`, `parent_booking`) VALUES
 	(1, 2, 1, '2026-04-10', 'completed', '2026-04-14 21:23:51', '2026-05-10', NULL, NULL),
 	(2, 3, 4, '2026-05-01', 'completed', '2026-04-29 05:23:47', '2026-06-01', NULL, NULL),
-	(3, 2, 1, '2026-05-10', 'completed', '2026-05-05 09:23:58', '2026-06-10', 'extend', 1);
+	(3, 2, 1, '2026-05-10', 'completed', '2026-05-05 09:23:58', '2026-06-10', 'extend', 1),
+	(4, 2, 4, '2026-07-01', 'completed', '2026-06-26 09:56:47', '2026-08-01', NULL, NULL);
 
 -- Dumping structure for table kos.chat_messages
 CREATE TABLE IF NOT EXISTS `chat_messages` (
@@ -56,9 +57,9 @@ CREATE TABLE IF NOT EXISTS `chat_messages` (
   KEY `sender_id` (`sender_id`),
   CONSTRAINT `chat_messages_ibfk_1` FOREIGN KEY (`id_chat`) REFERENCES `chat_rooms` (`id_chat`),
   CONSTRAINT `chat_messages_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id_user`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.chat_messages: ~9 rows (approximately)
+-- Dumping data for table kos.chat_messages: ~12 rows (approximately)
 INSERT INTO `chat_messages` (`id_message`, `id_chat`, `sender_id`, `message`, `sent_at`, `is_read`) VALUES
 	(1, 1, 2, 'test', '2026-04-19 22:58:07', 1),
 	(2, 1, 2, 'tes', '2026-04-19 22:58:58', 1),
@@ -68,7 +69,12 @@ INSERT INTO `chat_messages` (`id_message`, `id_chat`, `sender_id`, `message`, `s
 	(6, 2, 3, 'asdasd', '2026-04-29 05:26:54', 1),
 	(7, 2, 3, 'asdasdad', '2026-04-29 05:27:00', 1),
 	(8, 2, 3, 'sdasdassdfwefew', '2026-04-29 05:27:06', 1),
-	(9, 2, 1, 'skkasik', '2026-04-29 05:27:19', 1);
+	(9, 2, 1, 'skkasik', '2026-04-29 05:27:19', 1),
+	(10, 1, 2, 'qwqw', '2026-06-26 06:22:05', 1),
+	(11, 1, 2, 'qwqwq', '2026-06-26 06:22:07', 1),
+	(12, 1, 2, 'qwqwqw', '2026-06-26 06:22:08', 1),
+	(13, 1, 2, 'oi', '2026-07-01 06:54:36', 1),
+	(14, 2, 3, 'ppp', '2026-07-01 07:37:33', 1);
 
 -- Dumping structure for table kos.chat_rooms
 CREATE TABLE IF NOT EXISTS `chat_rooms` (
@@ -83,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `chat_rooms` (
   CONSTRAINT `chat_rooms_ibfk_2` FOREIGN KEY (`id_admin`) REFERENCES `users` (`id_user`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.chat_rooms: ~0 rows (approximately)
+-- Dumping data for table kos.chat_rooms: ~2 rows (approximately)
 INSERT INTO `chat_rooms` (`id_chat`, `id_user`, `id_admin`, `created_at`) VALUES
 	(1, 2, 1, '2026-04-19 22:58:07'),
 	(2, 3, 1, '2026-04-29 05:26:54');
@@ -117,13 +123,14 @@ CREATE TABLE IF NOT EXISTS `payments` (
   PRIMARY KEY (`id_payment`),
   KEY `id_booking` (`id_booking`),
   CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`id_booking`) REFERENCES `bookings` (`id_booking`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.payments: ~0 rows (approximately)
+-- Dumping data for table kos.payments: ~3 rows (approximately)
 INSERT INTO `payments` (`id_payment`, `id_booking`, `amount`, `payment_method`, `payment_status`, `payment_date`, `proof_of_payment`) VALUES
 	(1, 1, 350000.00, 'transfer', 'verified', '2026-04-15 02:48:45', 'payment_1776246525.jpg'),
 	(2, 2, 350000.00, 'transfer', 'verified', '2026-04-29 05:25:57', 'payment_2_20260429.png'),
-	(3, 3, 350000.00, 'cash', 'verified', '2026-05-06 08:01:19', 'payment_3_20260506.jpg');
+	(3, 3, 350000.00, 'cash', 'verified', '2026-05-06 08:01:19', 'payment_3_20260506.jpg'),
+	(4, 4, 350000.00, 'transfer', 'verified', '2026-06-26 09:57:57', 'payment_4_20260626.png');
 
 -- Dumping structure for table kos.reviews
 CREATE TABLE IF NOT EXISTS `reviews` (
@@ -143,7 +150,7 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.reviews: ~0 rows (approximately)
+-- Dumping data for table kos.reviews: ~2 rows (approximately)
 INSERT INTO `reviews` (`id_review`, `id_user`, `id_room`, `rating`, `review`, `created_at`, `id_booking`) VALUES
 	(1, 2, 1, 5, 'sadasdsadsad', '2026-04-29 01:18:27', 1),
 	(2, 3, 4, 4, 'asdasdasdasd', '2026-04-29 05:26:33', 2);
@@ -179,7 +186,7 @@ CREATE TABLE IF NOT EXISTS `rooms` (
   CONSTRAINT `rooms_ibfk_1` FOREIGN KEY (`id_kos`) REFERENCES `kos` (`id_kos`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 
--- Dumping data for table kos.rooms: ~3 rows (approximately)
+-- Dumping data for table kos.rooms: ~2 rows (approximately)
 INSERT INTO `rooms` (`id_room`, `id_kos`, `room_number`, `price`, `status`, `description`, `created_at`) VALUES
 	(1, 1, '3', 350000.00, 'available', '.........', '2026-04-11 14:24:03'),
 	(4, NULL, '4', 350000.00, 'available', NULL, '2026-04-23 05:27:47');
@@ -199,9 +206,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 -- Dumping data for table kos.users: ~3 rows (approximately)
 INSERT INTO `users` (`id_user`, `name`, `email`, `password`, `role`, `created_at`, `profil_picture`) VALUES
-	(1, 'Admin', 'admin@example.com', '$2y$10$0I5oMdAWkobatoE2jQ5j3ORIP.zmEbiiafW10F8he34oJr.pSo0K6', 'admin', '2026-04-11 14:06:13', NULL),
+	(1, 'Pby1', 'admin@example.com', '$2y$10$0I5oMdAWkobatoE2jQ5j3ORIP.zmEbiiafW10F8he34oJr.pSo0K6', 'admin', '2026-04-11 14:06:13', NULL),
 	(2, 'Riki', 'riki@example.com', '$2y$10$0I5oMdAWkobatoE2jQ5j3ORIP.zmEbiiafW10F8he34oJr.pSo0K6', 'user', '2026-04-11 14:06:51', '1778083596.jpg'),
-	(3, 'Anjing', 'anjing@example.com', '$2y$10$fMQiQHAAwCTFheGDLy60UObzKjvfwNS1A0fV28Kj2riXVoeLOda52', 'user', '2026-04-29 12:23:22', NULL);
+	(3, 'Anjing', 'anjing@example.com', '$2y$10$fMQiQHAAwCTFheGDLy60UObzKjvfwNS1A0fV28Kj2riXVoeLOda52', 'user', '2026-04-29 12:23:22', '1782916599.jpg');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
